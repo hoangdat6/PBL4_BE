@@ -1,5 +1,6 @@
 package org.pbl4.pbl4_be.controller;
 
+import org.pbl4.pbl4_be.controller.dto.GameStartDTO;
 import org.pbl4.pbl4_be.controller.dto.RoomResponse;
 import org.pbl4.pbl4_be.controller.exception.BadRequestException;
 import org.pbl4.pbl4_be.controller.exception.PlayerAlreadyInRoomException;
@@ -10,6 +11,7 @@ import org.pbl4.pbl4_be.service.GameRoomManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Objects;
@@ -19,10 +21,12 @@ import java.util.Random;
 @RequestMapping("/api/room")
 public class RoomController {
     private final GameRoomManager gameRoomManager;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @Autowired
-    public RoomController(GameRoomManager gameRoomManager) {
+    public RoomController(GameRoomManager gameRoomManager, SimpMessagingTemplate messagingTemplate) {
         this.gameRoomManager = gameRoomManager;
+        this.messagingTemplate = messagingTemplate;
     }
 
     // Xử lý yêu cầu tham gia phòng
@@ -45,10 +49,26 @@ public class RoomController {
 
         // Room này đảm bảo đã tồn tại
         Room room = gameRoomManager.getRoom(roomCode);
+        if(!room.checkFull()) {
+            room.addGame();
+        }
 
         addPlayerOrSpectator(room, playerId);
 
         System.out.println("Player " + playerId + " joined room " + roomCode);
+
+        if(room.checkFull()) {
+            GameStartDTO gameStartDTO = GameStartDTO.builder()
+                    .roomCode(roomCode)
+                    .startPlayerId(room.getGamePlaying().getFirstPlayerId())
+                    .build();
+
+//            for (Player player : room.getPlayers()) {
+//                messagingTemplate.convertAndSendToUser(player.getPlayerId(), "/topic/game-start/" + roomCode, gameStartDTO);
+//            }
+            // Nếu phòng đã đủ người chơi thì bắt đầu trò chơi
+            messagingTemplate.convertAndSend("/topic/game-start/" + roomCode, gameStartDTO);
+        }
 
         System.out.println("Players:");
         for (Player player : room.getPlayers()) {
@@ -61,7 +81,7 @@ public class RoomController {
         }
 
         // Return a response with the room details
-        return ResponseEntity.status(HttpStatus.OK).body(room.getRoomCode());
+        return ResponseEntity.status(HttpStatus.OK).body(RoomResponse.builder().roomCode(room.getRoomCode()).build());
     }
 
     private void addPlayerOrSpectator(Room room, String playerId) {
@@ -88,6 +108,7 @@ public class RoomController {
 
         // Add the owner to the room
         room.addPlayer(new Player(userId));
+
 
         System.out.println("Room created: " + room.getRoomCode());
 

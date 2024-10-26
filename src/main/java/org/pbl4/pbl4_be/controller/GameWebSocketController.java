@@ -1,5 +1,6 @@
 package org.pbl4.pbl4_be.controller;
 
+import org.pbl4.pbl4_be.controller.dto.GameStartDTO;
 import org.pbl4.pbl4_be.model.GameMove;
 import org.pbl4.pbl4_be.model.Game;
 import org.pbl4.pbl4_be.model.Room;
@@ -20,7 +21,6 @@ public class GameWebSocketController {
         this.gameRoomManager = gameRoomManager;
     }
 
-
     @MessageMapping("/move/{roomCode}")
     @SendTo("/topic/game-progress/{roomCode}")
     public GameMove makeMove(@PathVariable String roomCode, @Payload GameMove move) {
@@ -32,16 +32,22 @@ public class GameWebSocketController {
 
         game.increaseMoveCnt();
         if(move.isWin()) {
-            System.out.println("Player " + move.getNthMove() + " win");
+            System.out.println("Player " + move.getNthMove() % 2 + " win");
             game.setIsWin(true);
         }
         return move;
     }
 
     @MessageMapping("/start/{roomCode}")
-    @SendTo("/topic/game-start/{roomCode}")
-    public Room startGame(@PathVariable String roomCode) {
+    @SendTo("/game-start/{roomCode}")
+    public GameStartDTO startGame(@PathVariable String roomCode) {
         // Logic bắt đầu trò chơi
-        return gameRoomManager.getRoom(roomCode);
+        Room room = gameRoomManager.getRoom(roomCode);
+        GameStartDTO gameStartDTO = GameStartDTO.builder()
+                .roomCode(roomCode)
+                .startPlayerId(room.getGamePlaying().getFirstPlayerId())
+                .build();
+        return gameStartDTO;
     }
+
 }

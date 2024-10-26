@@ -80,12 +80,15 @@ public class Room {
     public boolean addPlayer(Player player) {
         if (!isFull()) {
             players.add(player);
-            if(isFull()) {
+            if (isFull()) {
                 setRoomStatusTypes(RoomStatusTypes.GAME_STARTED);
             }
-            return true;
         }
-        return false;
+        return checkFull();
+    }
+
+    public boolean checkFull() {
+        return players.size() == MAX_PLAYER;
     }
 
     public void addSpectator(Player player) {
