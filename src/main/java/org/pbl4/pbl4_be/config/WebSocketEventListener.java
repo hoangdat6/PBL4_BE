@@ -1,5 +1,6 @@
 package org.pbl4.pbl4_be.config;
 
+import org.pbl4.pbl4_be.service.GameRoomManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;

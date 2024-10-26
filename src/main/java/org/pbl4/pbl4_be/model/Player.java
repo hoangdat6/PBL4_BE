@@ -3,9 +3,11 @@ package org.pbl4.pbl4_be.model;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.security.Principal;
+
 @Setter
 @Getter
-public class Player {
+public class Player implements Principal {
     private String playerId;
     private String playerName;
 
@@ -18,4 +20,8 @@ public class Player {
 
     }
 
+    @Override
+    public String getName() {
+        return playerId;
+    }
 }
