@@ -9,7 +9,18 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 public class GameRoomManager {
+    public static GameRoomManager instance = new GameRoomManager();
+
     private Map<String, Room> rooms = new ConcurrentHashMap<>();
+
+
+    public static GameRoomManager getInstance() {
+        if(instance == null) {
+            instance = new GameRoomManager();
+        }
+        return instance;
+    }
+
 
     public Room createRoom(String roomId, String ownerId, FirstMoveOption firstMoveOption) {
         Room room = new Room(roomId, ownerId, firstMoveOption);
