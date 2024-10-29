@@ -1,12 +1,12 @@
 package org.pbl4.pbl4_be.controller;
 
-import org.pbl4.pbl4_be.controller.dto.GameStartDTO;
+import org.pbl4.pbl4_be.controller.dto.GameState;
 import org.pbl4.pbl4_be.controller.dto.RoomResponse;
 import org.pbl4.pbl4_be.controller.exception.BadRequestException;
 import org.pbl4.pbl4_be.controller.exception.PlayerAlreadyInRoomException;
 import org.pbl4.pbl4_be.enums.FirstMoveOption;
-import org.pbl4.pbl4_be.model.Player;
-import org.pbl4.pbl4_be.model.Room;
+import org.pbl4.pbl4_be.models.Player;
+import org.pbl4.pbl4_be.models.Room;
 import org.pbl4.pbl4_be.service.GameRoomManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -47,36 +47,41 @@ public class RoomController {
             throw new PlayerAlreadyInRoomException("Player is playing in another room");
         }
 
+
         // Room này đảm bảo đã tồn tại
         Room room = gameRoomManager.getRoom(roomCode);
         if(!room.checkFull()) {
             room.addGame();
         }
 
-        addPlayerOrSpectator(room, playerId);
-
-        System.out.println("Player " + playerId + " joined room " + roomCode);
-
-        if(room.checkFull()) {
-            GameStartDTO gameStartDTO = GameStartDTO.builder()
+        if(room.checkPlayerExist(playerId)) {
+            // Player đã tham gia phòng
+            GameState gameState = GameState.builder()
                     .roomCode(roomCode)
                     .startPlayerId(room.getGamePlaying().getFirstPlayerId())
+                    .nthMove(room.getGamePlaying().getNthMove())
                     .build();
 
-//            for (Player player : room.getPlayers()) {
-//                messagingTemplate.convertAndSendToUser(player.getPlayerId(), "/topic/game-start/" + roomCode, gameStartDTO);
-//            }
-            // Nếu phòng đã đủ người chơi thì bắt đầu trò chơi
-            messagingTemplate.convertAndSend("/topic/game-start/" + roomCode, gameStartDTO);
+            gameState.setBoardState(room.getGamePlaying().getBoard());
+            messagingTemplate.convertAndSend("/topic/game-state/" + roomCode, gameState);
+        }else {
+            addPlayerOrSpectator(room, playerId);
+            if(room.checkFull()) {
+                GameState gameState = GameState.builder()
+                        .roomCode(roomCode)
+                        .startPlayerId(room.getGamePlaying().getFirstPlayerId())
+                        .nthMove(room.getGamePlaying().getNthMove())
+                        .build();
+
+                gameState.setBoardState(room.getGamePlaying().getBoard());
+
+                messagingTemplate.convertAndSend("/topic/game-state/" + roomCode, gameState);
+            }
         }
 
-        System.out.println("Players:");
+        // show player list
+        System.out.println("Player list: ");
         for (Player player : room.getPlayers()) {
-            System.out.println(player.getPlayerId());
-        }
-
-        System.out.println("Spectators:");
-        for (Player player : room.getSpectators()) {
             System.out.println(player.getPlayerId());
         }
 
@@ -98,7 +103,7 @@ public class RoomController {
                                         @RequestParam("firstMoveOption") FirstMoveOption firstMoveOption
     ) {
 
-        System.out.println("Create room" + userId + firstMoveOption);
+        System.out.println("Create room " + userId + " " + firstMoveOption);
 
         String codeRandom = randomRoomCode();
         while (gameRoomManager.checkRoomExist(codeRandom)) {
@@ -109,10 +114,22 @@ public class RoomController {
         // Add the owner to the room
         room.addPlayer(new Player(userId));
 
-
         System.out.println("Room created: " + room.getRoomCode());
 
         return ResponseEntity.status(HttpStatus.OK).body(RoomResponse.builder().roomCode(room.getRoomCode()).build());
+    }
+
+    // test get GameState
+    @GetMapping("/game-state")
+    public ResponseEntity<?> getGameState(@RequestParam("roomCode") String roomCode) {
+        Room room = gameRoomManager.getRoom(roomCode);
+        GameState gameState = GameState.builder()
+                .roomCode(roomCode)
+                .startPlayerId(room.getGamePlaying().getFirstPlayerId())
+                .nthMove(room.getGamePlaying().getNthMove())
+                .build();
+        gameState.setBoardState(room.getGamePlaying().getBoard());
+        return ResponseEntity.status(HttpStatus.OK).body(gameState);
     }
 
 
@@ -120,6 +137,29 @@ public class RoomController {
         Random random = new Random();
         int code = 100000 + random.nextInt(900000);
         return String.valueOf(code);
+    }
+
+    @PostMapping("/leave")
+    public ResponseEntity<?> leaveRoom(@RequestParam("playerId") String playerId) {
+        String roomCode = gameRoomManager.getRoomCodeByPlayerId(playerId);
+        if (roomCode == null) {
+            throw new BadRequestException("Player is not in any room");
+        }
+
+        Room room = gameRoomManager.getRoom(roomCode);
+        if (room == null) {
+            throw new BadRequestException("Room not found");
+        }
+
+        if (room.checkPlayerExist(playerId)) {
+            room.removePlayer(playerId);
+        } else if (room.checkSpectatorExist(playerId)) {
+            room.removeSpectator(playerId);
+        } else {
+            throw new BadRequestException("Player is not in any room");
+        }
+
+        return ResponseEntity.status(HttpStatus.OK).body(RoomResponse.builder().roomCode(room.getRoomCode()).build());
     }
 }
 
