@@ -1,7 +1,7 @@
 package org.pbl4.pbl4_be.service;
 
 import org.pbl4.pbl4_be.enums.FirstMoveOption;
-import org.pbl4.pbl4_be.model.Room;
+import org.pbl4.pbl4_be.models.Room;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;

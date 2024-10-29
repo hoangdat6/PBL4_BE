@@ -1,41 +1,50 @@
-package org.pbl4.pbl4_be.model;
+package org.pbl4.pbl4_be.models;
+
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class Game {
-    private static short moveCount = 0;
-    private Integer gameId;
-    private String roomId;
-    private short[][] board;
-    private String firstPlayerId;
-    private Boolean isWin;
+public class Board {
+    private byte[][] board;
+    private int size;
+    private int winLength;
 
-    public Game(String roomId, Integer gameId, String firstPlayerId) {
-        this.roomId = roomId;
-        this.gameId = gameId;
-        this.board = new short[16][16];
-        this.firstPlayerId = firstPlayerId;
-        this.isWin = null;
+    public Board(int size, int winLength) {
+        this.size = size;
+        this.winLength = winLength;
+        this.board = new byte[size][size];
+        reset();
     }
 
-    public void increaseMoveCnt() {
-        ++moveCount;
+    public void reset() {
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                board[i][j] = -1;
+            }
+        }
     }
 
-    public boolean processMove(GameMove move) {
-        // Xử lý nước đi của người chơi
-
-        board[move.getRow()][move.getCol()] = (short) (move.getNthMove() % 2);
-        return checkWin(move.getRow(), move.getCol(), (short) (move.getNthMove() % 2));
+    public boolean isFull() {
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                if (board[i][j] == -1) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
-    public boolean checkWin(int row, int col, short symbol) {
+    public void setMove(int row, int col, byte symbol) {
+        board[row][col] = (byte) symbol;
+    }
+
+    public boolean checkWin(int row, int col, byte symbol) {
         return checkRow(row, col, symbol) || checkCol(row, col, symbol) || checkDiagonal(row, col, symbol);
     }
 
-    public boolean checkRow(int row, int col, short symbol) {
+    public boolean checkRow(int row, int col, byte symbol) {
         // Kiểm tra hàng ngang
         int cnt = 1;
         int i = col - 1;
@@ -48,10 +57,10 @@ public class Game {
             cnt++;
             i++;
         }
-        return cnt >= 5;
+        return cnt >= winLength;
     }
 
-    public boolean checkCol(int row, int col, short symbol) {
+    public boolean checkCol(int row, int col, byte symbol) {
         // Kiểm tra hàng dọc
         int cnt = 1;
         int i = row - 1;
@@ -64,10 +73,10 @@ public class Game {
             cnt++;
             i++;
         }
-        return cnt >= 5;
+        return cnt >= winLength;
     }
 
-    public boolean checkDiagonal(int row, int col, short symbol) {
+    public boolean checkDiagonal(int row, int col, byte symbol) {
         // Kiểm tra chéo chính
         int cnt = 1;
         int i = row - 1;
@@ -84,7 +93,7 @@ public class Game {
             i++;
             j++;
         }
-        if (cnt >= 5) {
+        if (cnt >= winLength) {
             return true;
         }
         // Kiểm tra chéo phụ
@@ -103,8 +112,6 @@ public class Game {
             i++;
             j--;
         }
-        return cnt >= 5;
+        return cnt >= winLength;
     }
-
-    // Các phương thức xử lý logic khác (xử lý nước đi, kiểm tra thắng/thua...)
 }

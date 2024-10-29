@@ -1,4 +1,4 @@
-package org.pbl4.pbl4_be.model;
+package org.pbl4.pbl4_be.models;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -42,11 +42,15 @@ public class Room {
     }
 
     public String firstMove() {
-        if (firstMoveOption == FirstMoveOption.RANDOM) {
-            return Math.random() < 0.5 ? players.get(0).getPlayerId() : players.get(1).getPlayerId();
-        }
+        if(games.isEmpty()) {
+            if (firstMoveOption == FirstMoveOption.RANDOM) {
+                return Math.random() < 0.5 ? players.get(0).getPlayerId() : players.get(1).getPlayerId();
+            }
 
-        return firstMoveOption == FirstMoveOption.ROOM_OWNER ? players.get(0).getPlayerId() : players.get(1).getPlayerId();
+            return firstMoveOption == FirstMoveOption.ROOM_OWNER ? players.get(0).getPlayerId() : players.get(1).getPlayerId();
+        }else {
+            return games.get(games.size() - 1).getFirstPlayerId().equals(players.get(0).getPlayerId()) ? players.get(1).getPlayerId() : players.get(0).getPlayerId();
+        }
     }
 
 
@@ -105,4 +109,11 @@ public class Room {
         return false;
     }
 
+    public void removePlayer(String playerId) {
+        players.removeIf(player -> player.getPlayerId().equals(playerId));
+    }
+
+    public void removeSpectator(String playerId) {
+        spectators.removeIf(player -> player.getPlayerId().equals(playerId));
+    }
 }
