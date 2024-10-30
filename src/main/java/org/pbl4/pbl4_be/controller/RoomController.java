@@ -5,6 +5,7 @@ import org.pbl4.pbl4_be.controller.dto.RoomResponse;
 import org.pbl4.pbl4_be.controller.exception.BadRequestException;
 import org.pbl4.pbl4_be.controller.exception.PlayerAlreadyInRoomException;
 import org.pbl4.pbl4_be.enums.FirstMoveOption;
+import org.pbl4.pbl4_be.enums.ParticipantType;
 import org.pbl4.pbl4_be.models.Player;
 import org.pbl4.pbl4_be.models.Room;
 import org.pbl4.pbl4_be.service.GameRoomManager;
@@ -16,12 +17,14 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Objects;
 import java.util.Random;
+import java.util.logging.Logger;
 
 @RestController
 @RequestMapping("/api/room")
 public class RoomController {
     private final GameRoomManager gameRoomManager;
     private final SimpMessagingTemplate messagingTemplate;
+    private Logger logger = Logger.getLogger(RoomController.class.getName());
 
     @Autowired
     public RoomController(GameRoomManager gameRoomManager, SimpMessagingTemplate messagingTemplate) {
@@ -34,9 +37,10 @@ public class RoomController {
     public ResponseEntity<Object> join(@RequestParam("playerId") String playerId,
                                        @RequestParam("roomCode") String roomCode) {
 
-        System.out.println("Join room" + playerId + " " + roomCode);
+        logger.info("User Id: " + playerId + " Join room: " + roomCode);
 
         if (gameRoomManager.getRoom(roomCode) == null) {
+            logger.warning("Room" + roomCode + "not found");
             throw new BadRequestException("Room not found");
         }
 
@@ -44,77 +48,57 @@ public class RoomController {
 
         // Kiểm tra player đã tham gia phòng khác chưa
         if (roomCodeOfPlayer != null && !Objects.equals(roomCode, roomCodeOfPlayer)) {
+            logger.warning("Player with ID: " + playerId + " is playing in another room");
             throw new PlayerAlreadyInRoomException("Player is playing in another room");
         }
 
-
         // Room này đảm bảo đã tồn tại
         Room room = gameRoomManager.getRoom(roomCode);
-        if(!room.checkFull()) {
-            room.addGame();
-        }
 
-        if(room.checkPlayerExist(playerId)) {
-            // Player đã tham gia phòng
-            GameState gameState = GameState.builder()
-                    .roomCode(roomCode)
-                    .startPlayerId(room.getGamePlaying().getFirstPlayerId())
-                    .nthMove(room.getGamePlaying().getNthMove())
-                    .build();
-
-            gameState.setBoardState(room.getGamePlaying().getBoard());
-            messagingTemplate.convertAndSend("/topic/game-state/" + roomCode, gameState);
-        }else {
-            addPlayerOrSpectator(room, playerId);
-            if(room.checkFull()) {
-                GameState gameState = GameState.builder()
-                        .roomCode(roomCode)
-                        .startPlayerId(room.getGamePlaying().getFirstPlayerId())
-                        .nthMove(room.getGamePlaying().getNthMove())
-                        .build();
-
-                gameState.setBoardState(room.getGamePlaying().getBoard());
-
-                messagingTemplate.convertAndSend("/topic/game-state/" + roomCode, gameState);
+        //  nếu phòng chưa full thì thêm player vào phòng
+        if (!room.checkFull()) {
+            room.addPlayer(new Player(playerId));
+            if (room.checkFull()) {
+                room.startGame();
             }
         }
 
-        // show player list
-        System.out.println("Player list: ");
-        for (Player player : room.getPlayers()) {
-            System.out.println(player.getPlayerId());
+        GameState gameState = GameState.builder()
+                .roomCode(roomCode)
+                .startPlayerId(room.getGamePlaying().getFirstPlayerId())
+                .nthMove(room.getGamePlaying().getNthMove())
+                .build();
+        gameState.setBoardState(room.getGamePlaying().getBoard());
+
+        // Set participant type
+        if (room.checkPlayerExist(playerId)) {
+            gameState.setParticipantType(ParticipantType.PLAYER);
+        } else {
+            gameState.setParticipantType(ParticipantType.SPECTATOR);
+            room.addSpectator(new Player(playerId));
         }
+
+        messagingTemplate.convertAndSend("/topic/game-state/" + roomCode, gameState);
 
         // Return a response with the room details
         return ResponseEntity.status(HttpStatus.OK).body(RoomResponse.builder().roomCode(room.getRoomCode()).build());
     }
 
-    private void addPlayerOrSpectator(Room room, String playerId) {
-        Player player = new Player(playerId);
-        if (!room.checkPlayerExist(playerId)) {
-            if (!room.addPlayer(player) && !room.checkSpectatorExist(playerId)) {
-                room.addSpectator(player);
-            }
-        }
-    }
 
     @PostMapping("/create")
     public ResponseEntity<?> createRoom(@RequestParam("userId") String userId,
                                         @RequestParam("firstMoveOption") FirstMoveOption firstMoveOption
     ) {
-
-        System.out.println("Create room " + userId + " " + firstMoveOption);
-
+        logger.info("User Id: " + userId + " Create room!");
         String codeRandom = randomRoomCode();
         while (gameRoomManager.checkRoomExist(codeRandom)) {
             codeRandom = randomRoomCode();
         }
         Room room = gameRoomManager.createRoom(codeRandom, userId, firstMoveOption);
 
+        logger.info("Room created with code: " + room.getRoomId());
         // Add the owner to the room
         room.addPlayer(new Player(userId));
-
-        System.out.println("Room created: " + room.getRoomCode());
 
         return ResponseEntity.status(HttpStatus.OK).body(RoomResponse.builder().roomCode(room.getRoomCode()).build());
     }
@@ -143,11 +127,13 @@ public class RoomController {
     public ResponseEntity<?> leaveRoom(@RequestParam("playerId") String playerId) {
         String roomCode = gameRoomManager.getRoomCodeByPlayerId(playerId);
         if (roomCode == null) {
+            logger.warning("Player with ID: " + playerId + " is not in any room");
             throw new BadRequestException("Player is not in any room");
         }
 
         Room room = gameRoomManager.getRoom(roomCode);
         if (room == null) {
+            logger.warning("Room" + roomCode + "not found");
             throw new BadRequestException("Room not found");
         }
 

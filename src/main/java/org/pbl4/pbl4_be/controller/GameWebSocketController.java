@@ -38,13 +38,18 @@ public class GameWebSocketController {
         Room room = gameRoomManager.getRoom(roomCode);
 
         Game game = room.getGamePlaying();
+        game.getMoveList().add(move);
         if(game.processMove(move))
             move.setWin(true);
 
+
         game.increaseMoveCnt();
         if(move.isWin()) {
-            System.out.println("Player " + move.getNthMove() % 2 + " win");
-            game.setIsWin(true);
+            if(move.getNthMove() % 2 == 0) {
+                game.setWinnerId(game.getFirstPlayerId());
+            } else {
+                game.setWinnerId(game.getSecondPlayerId());
+            }
         }
         return move;
     }
