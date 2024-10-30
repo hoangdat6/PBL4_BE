@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
+import org.pbl4.pbl4_be.enums.ParticipantType;
 import org.pbl4.pbl4_be.models.Board;
 
 @Getter
@@ -14,6 +15,7 @@ public class GameState {
     private String startPlayerId;
     private short nthMove;
     private BoardDTO boardState;
+    private ParticipantType participantType;
 
     public void setBoardState(Board board) {
         Gson gson = new Gson();
