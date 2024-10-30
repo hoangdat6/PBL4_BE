@@ -7,6 +7,7 @@ import org.pbl4.pbl4_be.enums.RoomStatusTypes;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.pbl4.pbl4_be.Constants.MAX_PLAYER;
 
@@ -41,16 +42,21 @@ public class Room {
         return newGame;
     }
 
-    public String firstMove() {
+    public Map.Entry<String, String> firstMove() {
         if(games.isEmpty()) {
             if (firstMoveOption == FirstMoveOption.RANDOM) {
-                return Math.random() < 0.5 ? players.get(0).getPlayerId() : players.get(1).getPlayerId();
+                return Math.random() < 0.5 ? getPlayers(0, 1) : getPlayers(1, 0);
             }
 
-            return firstMoveOption == FirstMoveOption.ROOM_OWNER ? players.get(0).getPlayerId() : players.get(1).getPlayerId();
+            return firstMoveOption == FirstMoveOption.ROOM_OWNER ? getPlayers(0, 1) : getPlayers(1, 0);
         }else {
-            return games.get(games.size() - 1).getFirstPlayerId().equals(players.get(0).getPlayerId()) ? players.get(1).getPlayerId() : players.get(0).getPlayerId();
+            return games.get(games.size() - 1).getFirstPlayerId().equals(players.get(0).getPlayerId()) ?
+                    getPlayers(1, 0) : getPlayers(0, 1);
         }
+    }
+
+    public Map.Entry<String, String> getPlayers(int first, int last) {
+        return Map.entry(players.get(first).getPlayerId(), players.get(last).getPlayerId());
     }
 
 
@@ -115,5 +121,9 @@ public class Room {
 
     public void removeSpectator(String playerId) {
         spectators.removeIf(player -> player.getPlayerId().equals(playerId));
+    }
+
+    public void startGame() {
+        this.addGame();
     }
 }
