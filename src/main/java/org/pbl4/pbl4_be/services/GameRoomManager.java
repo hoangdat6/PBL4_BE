@@ -2,6 +2,7 @@ package org.pbl4.pbl4_be.services;
 
 import org.pbl4.pbl4_be.controller.dto.ConfigGameDTO;
 import org.pbl4.pbl4_be.enums.FirstMoveOption;
+import org.pbl4.pbl4_be.enums.RoomStatusTypes;
 import org.pbl4.pbl4_be.models.Room;
 import org.springframework.stereotype.Component;
 
