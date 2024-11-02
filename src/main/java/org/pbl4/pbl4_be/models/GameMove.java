@@ -15,7 +15,7 @@ public class GameMove {
         // No-argument constructor
     }
 
-    public GameMove(int row, int col, byte nthMove) {
+    public GameMove(int row, int col, short nthMove) {
         this.row = row;
         this.col = col;
         this.nthMove = nthMove;

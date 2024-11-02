@@ -55,11 +55,10 @@ public class GameWebSocketController {
 
     @MessageMapping("/join-room")
     public void handleJoinRoom(Principal principal, @RequestParam("roomCode") String roomCode) throws JsonProcessingException {
-
         ObjectMapper objectMapper = new ObjectMapper();
         Map<String, String> map = objectMapper.readValue(roomCode, Map.class);
         // Lấy room từ gameRoomManager
-        Room room = gameRoomManager.getRoom(map.get("roomCode"));   
+        Room room = gameRoomManager.getRoom(map.get("roomCode"));
         System.out.println("Join room " + " " + roomCode);
 
         // Kiểm tra phòng đã đầy hay chưa

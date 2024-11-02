@@ -61,20 +61,22 @@ public class RoomController {
         //  nếu phòng chưa full thì thêm player vào phòng
         if (!room.checkFull()) {
             room.addPlayer(new Player(playerId));
-
         }
 
 
-        if (room.checkFull()) {
+        if (room.checkFull() && room.getGamePlaying() == null) {
             room.startGame();
 
+
+        }
+
+        if(room.getGamePlaying() != null) {
             GameState gameState = GameState.builder()
                     .roomCode(roomCode)
                     .startPlayerId(room.getGamePlaying().getFirstPlayerId())
                     .nthMove(room.getGamePlaying().getNthMove())
                     .build();
             gameState.setBoardState(room.getGamePlaying().getBoard());
-
 
             messagingTemplate.convertAndSend("/topic/game-state/" + roomCode, gameState);
         }
@@ -96,40 +98,6 @@ public class RoomController {
     }
 
 
-//    @PostMapping("/create")
-//    public ResponseEntity<?> createRoom(@RequestParam("userId") String userId,
-//                                        @RequestParam("firstMoveOption") FirstMoveOption firstMoveOption
-//    ) {
-//        String roomCodeOfPlayer = gameRoomManager.getRoomCodeByPlayerId(userId);
-//
-//        // Kiểm tra player đã tham gia phòng khác chưa
-//        logger.info("User Id: " + userId + " Create room!");
-////        if (roomCodeOfPlayer != null) {
-//////            gameRoomManager.removeRoom(roomCodeOfPlayer);
-////            // nếu user đã ở trong phòng thì thông báo cho các client khác rằng user đã rời phòng
-////            Room room = gameRoomManager.getRoom(roomCodeOfPlayer);
-////            if (room != null) {
-////                room.setEnd();
-////                messagingTemplate.convertAndSend("/topic/leave-room/" + roomCodeOfPlayer, RoomResponse.builder().roomCode(roomCodeOfPlayer).build());
-////            }
-////        }
-//        String codeRandom = randomRoomCode();
-//        while (gameRoomManager.checkRoomExist(codeRandom)) {
-//            codeRandom = randomRoomCode();
-//        }
-//        Room room = gameRoomManager.createRoom(codeRandom, userId, firstMoveOption);
-//
-//        logger.info("Room created with code: " + room.getRoomCode());
-//        // Add the owner to the room
-//
-//        room.addPlayer(new Player(userId));
-//        JoinRoomResponse response = JoinRoomResponse.builder()
-//                .roomCode(room.getRoomCode())
-//                .participantType(ParticipantType.PLAYER)
-//                .build();
-//
-//        return ResponseEntity.status(HttpStatus.OK).body(response);
-//    }
 
     @PostMapping("/create")
     public ResponseEntity<?> createRoom(@RequestBody ConfigGameDTO configGameDTO) {
@@ -137,6 +105,10 @@ public class RoomController {
 
         // Kiểm tra player đã tham gia phòng khác chưa
         logger.info("User Id: " + userId + " Create room!");
+
+        String roomCodeOfPlayer = gameRoomManager.getRoomCodeByPlayerId(userId);
+
+
 
         String codeRandom = randomRoomCode();
         while (gameRoomManager.checkRoomExist(codeRandom)) {
