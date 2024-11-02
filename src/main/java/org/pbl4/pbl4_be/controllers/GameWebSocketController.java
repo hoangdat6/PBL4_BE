@@ -42,7 +42,6 @@ public class GameWebSocketController {
         if(game.processMove(move))
             move.setWin(true);
 
-
         game.increaseMoveCnt();
         if(move.isWin()) {
             if(move.getNthMove() % 2 == 0) {
@@ -54,25 +53,13 @@ public class GameWebSocketController {
         return move;
     }
 
-    @MessageMapping("/start/{roomCode}")
-    @SendTo("/topic/game-start/{roomCode}")
-    public GameState startGame(@PathVariable String roomCode) {
-        // Logic bắt đầu trò chơi
-        Room room = gameRoomManager.getRoom(roomCode);
-        GameState gameStartDTO = GameState.builder()
-                .roomCode(roomCode)
-                .startPlayerId(room.getGamePlaying().getFirstPlayerId())
-                .build();
-        return gameStartDTO;
-    }
-
     @MessageMapping("/join-room")
     public void handleJoinRoom(Principal principal, @RequestParam("roomCode") String roomCode) throws JsonProcessingException {
 
         ObjectMapper objectMapper = new ObjectMapper();
         Map<String, String> map = objectMapper.readValue(roomCode, Map.class);
         // Lấy room từ gameRoomManager
-        Room room = gameRoomManager.getRoom(map.get("roomCode"));
+        Room room = gameRoomManager.getRoom(map.get("roomCode"));   
         System.out.println("Join room " + " " + roomCode);
 
         // Kiểm tra phòng đã đầy hay chưa

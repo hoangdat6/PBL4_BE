@@ -15,7 +15,6 @@ public class GameState {
     private String startPlayerId;
     private short nthMove;
     private BoardDTO boardState;
-    private ParticipantType participantType;
 
     public void setBoardState(Board board) {
         Gson gson = new Gson();

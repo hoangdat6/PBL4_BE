@@ -20,6 +20,8 @@ public class Game {
     private TimeZone endTime;
     private String winnerId;
     private List<GameMove> moveList;
+    private boolean isEnd;
+
 
     public Game(String roomId, Integer gameId, Map.Entry<String, String> players) {
         this.roomId = roomId;
@@ -32,6 +34,7 @@ public class Game {
         this.endTime = TimeZone.getTimeZone("UTC");
         this.winnerId = null;
         this.moveList = new ArrayList<>();
+        this.isEnd = false;
     }
 
     public void increaseMoveCnt() {
@@ -43,7 +46,4 @@ public class Game {
         board.setMove(move.getRow(), move.getCol(), (byte) (move.getNthMove() % 2));
         return board.checkWin(move.getRow(), move.getCol(), (byte) (move.getNthMove() % 2));
     }
-
-
-
 }
