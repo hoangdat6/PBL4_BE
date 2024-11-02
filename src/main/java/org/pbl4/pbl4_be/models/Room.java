@@ -65,6 +65,9 @@ public class Room {
 
 
     public Game getGamePlaying() {
+        if(games.isEmpty()) {
+            return null;
+        }
         Game game = games.get(games.size() - 1);
         return game.isEnd() ? null : game;
     }
