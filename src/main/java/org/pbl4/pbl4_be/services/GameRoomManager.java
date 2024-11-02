@@ -1,6 +1,8 @@
 package org.pbl4.pbl4_be.services;
 
+import org.pbl4.pbl4_be.controller.dto.ConfigGameDTO;
 import org.pbl4.pbl4_be.enums.FirstMoveOption;
+import org.pbl4.pbl4_be.enums.RoomStatusTypes;
 import org.pbl4.pbl4_be.models.Room;
 import org.springframework.stereotype.Component;
 
@@ -22,8 +24,8 @@ public class GameRoomManager {
     }
 
 
-    public Room createRoom(String roomId, String ownerId, FirstMoveOption firstMoveOption) {
-        Room room = new Room(roomId, ownerId, firstMoveOption);
+    public Room createRoom(String roomId, ConfigGameDTO configGameDTO) {
+        Room room = new Room(roomId, configGameDTO);
         rooms.put(roomId, room);
         return room;
     }
@@ -36,16 +38,10 @@ public class GameRoomManager {
         return isRoomExist(roomId);
     }
 
-    public boolean checkPlayerExist(String roomId, String playerId) {
-        if (isRoomExist(roomId)) {
-            return rooms.get(roomId).checkPlayerExist(playerId);
-        }
-        return false;
-    }
-
     public String getRoomCodeByPlayerId(String playerId) {
         for (Room room : rooms.values()) {
-            if (room.checkPlayerExist(playerId)) {
+            if ( !room.isEnd()
+                    && room.checkPlayerExist(playerId)) {
                 return room.getRoomCode();
             }
         }
