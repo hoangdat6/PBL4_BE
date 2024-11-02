@@ -33,11 +33,12 @@ public class Board {
                 }
             }
         }
+
         return true;
     }
 
     public void setMove(int row, int col, byte symbol) {
-        board[row][col] = (byte) symbol;
+        board[row][col] = symbol;
     }
 
     public boolean checkWin(int row, int col, byte symbol) {
