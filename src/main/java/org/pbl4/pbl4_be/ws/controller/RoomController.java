@@ -1,16 +1,15 @@
-package org.pbl4.pbl4_be.controller;
+package org.pbl4.pbl4_be.ws.controller;
 
 import org.pbl4.pbl4_be.controller.dto.ConfigGameDTO;
-import org.pbl4.pbl4_be.controller.dto.GameState;
 import org.pbl4.pbl4_be.controller.dto.JoinRoomResponse;
-import org.pbl4.pbl4_be.controller.dto.RoomResponse;
-import org.pbl4.pbl4_be.controller.exception.BadRequestException;
-import org.pbl4.pbl4_be.controller.exception.PlayerAlreadyInRoomException;
-import org.pbl4.pbl4_be.enums.FirstMoveOption;
+import org.pbl4.pbl4_be.controllers.dto.GameState;
+import org.pbl4.pbl4_be.controllers.dto.RoomResponse;
+import org.pbl4.pbl4_be.controllers.exception.BadRequestException;
+import org.pbl4.pbl4_be.controllers.exception.PlayerAlreadyInRoomException;
 import org.pbl4.pbl4_be.enums.ParticipantType;
 import org.pbl4.pbl4_be.models.Player;
 import org.pbl4.pbl4_be.models.Room;
-import org.pbl4.pbl4_be.service.GameRoomManager;
+import org.pbl4.pbl4_be.services.GameRoomManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,7 +23,7 @@ import java.util.logging.Logger;
 @RestController
 @RequestMapping("/api/room")
 public class RoomController {
-    private final GameRoomManager gameRoomManager;
+    private final org.pbl4.pbl4_be.services.GameRoomManager gameRoomManager;
     private final SimpMessagingTemplate messagingTemplate;
     private Logger logger = Logger.getLogger(RoomController.class.getName());
 
@@ -39,10 +38,7 @@ public class RoomController {
     public ResponseEntity<Object> join(@RequestParam("playerId") String playerId,
                                        @RequestParam("roomCode") String roomCode) {
 
-        logger.info("User Id: " + playerId + " Join room: " + roomCode);
-
         if (gameRoomManager.getRoom(roomCode) == null) {
-            logger.warning("Room" + roomCode + "not found");
             throw new BadRequestException("Room not found");
         }
 
@@ -50,25 +46,22 @@ public class RoomController {
 
         // Kiểm tra player đã tham gia phòng khác chưa
         if (roomCodeOfPlayer != null && !Objects.equals(roomCode, roomCodeOfPlayer)) {
-            logger.warning("Player with ID: " + playerId + " is playing in another room " + roomCodeOfPlayer);
-            throw new PlayerAlreadyInRoomException("Player is playing in another room");
+            throw new PlayerAlreadyInRoomException(HttpStatus.CONFLICT ,"Player is playing in another room", roomCodeOfPlayer);
         }
-
 
         // Room này đảm bảo đã tồn tại
         Room room = gameRoomManager.getRoom(roomCode);
 
         //  nếu phòng chưa full thì thêm player vào phòng
-        if (!room.checkFull()) {
+        if (!room.checkFull() && !room.checkPlayerExist(playerId)) {
             room.addPlayer(new Player(playerId));
         }
 
-
         if (room.checkFull() && room.getGamePlaying() == null) {
             room.startGame();
+        }   
 
-
-        }
+        System.out.println("Số lượng game trong room: " + room.getGames().size());
 
         if(room.getGamePlaying() != null) {
             GameState gameState = GameState.builder()
@@ -98,7 +91,6 @@ public class RoomController {
     }
 
 
-
     @PostMapping("/create")
     public ResponseEntity<?> createRoom(@RequestBody ConfigGameDTO configGameDTO) {
         String userId = configGameDTO.getOwnerId();
@@ -108,7 +100,9 @@ public class RoomController {
 
         String roomCodeOfPlayer = gameRoomManager.getRoomCodeByPlayerId(userId);
 
-
+        if (roomCodeOfPlayer != null) {
+            throw new PlayerAlreadyInRoomException(HttpStatus.CONFLICT ,"Player is playing in another room", roomCodeOfPlayer);
+        }
 
         String codeRandom = randomRoomCode();
         while (gameRoomManager.checkRoomExist(codeRandom)) {
@@ -157,7 +151,6 @@ public class RoomController {
 
         Room room = gameRoomManager.getRoom(roomCode);
         if (room == null) {
-            logger.warning("Room" + roomCode + "not found");
             throw new BadRequestException("Room not found");
         }
 
@@ -168,6 +161,8 @@ public class RoomController {
         } else {
             throw new BadRequestException("Player is not in any room");
         }
+
+
 
         return ResponseEntity.status(HttpStatus.OK).body(RoomResponse.builder().roomCode(room.getRoomCode()).build());
     }

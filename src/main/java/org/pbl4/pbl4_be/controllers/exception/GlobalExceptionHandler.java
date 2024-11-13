@@ -20,14 +20,15 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(value = {BadRequestException.class, MissingServletRequestParameterException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     ResponseEntity<?> handleBadRequest(Exception e) {
-        return new ResponseEntity<>(new ErrorDTO<>(HttpStatus.BAD_REQUEST.value(),
-                e.getMessage()), HttpStatus.BAD_REQUEST);
+
+        return ResponseEntity.badRequest().body(new ErrorDTO<>(HttpStatus.BAD_REQUEST.value(),
+                e.getMessage()));
     }
 
     @ExceptionHandler(PlayerAlreadyInRoomException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
     public ResponseEntity<Object> handlePlayerAlreadyInRoomException(PlayerAlreadyInRoomException ex) {
-        // Trả về mã trạng thái 409 Conflict với thông báo lỗi
-        return new ResponseEntity<>(ex.getMessage(), HttpStatus.CONFLICT);
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ex);
     }
 
 

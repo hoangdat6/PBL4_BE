@@ -1,6 +1,7 @@
 package org.pbl4.pbl4_be.models;
 import lombok.Getter;
 import lombok.Setter;
+import org.pbl4.pbl4_be.enums.GameStatus;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +21,7 @@ public class Game {
     private TimeZone endTime;
     private String winnerId;
     private List<GameMove> moveList;
-    private boolean isEnd;
+    private GameStatus gameStatus;
 
 
     public Game(String roomId, Integer gameId, Map.Entry<String, String> players) {
@@ -34,7 +35,7 @@ public class Game {
         this.endTime = TimeZone.getTimeZone("UTC");
         this.winnerId = null;
         this.moveList = new ArrayList<>();
-        this.isEnd = false;
+        this.gameStatus = GameStatus.STARTED;
     }
 
     public void increaseMoveCnt() {
@@ -45,5 +46,9 @@ public class Game {
         // Xử lý nước đi của người chơi
         board.setMove(move.getRow(), move.getCol(), (byte) (move.getNthMove() % 2));
         return board.checkWin(move.getRow(), move.getCol(), (byte) (move.getNthMove() % 2));
+    }
+
+    public boolean isEnd() {
+        return gameStatus == GameStatus.ENDED;
     }
 }

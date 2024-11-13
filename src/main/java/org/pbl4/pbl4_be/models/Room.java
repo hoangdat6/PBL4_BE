@@ -4,7 +4,8 @@ import lombok.Getter;
 import lombok.Setter;
 import org.pbl4.pbl4_be.controller.dto.ConfigGameDTO;
 import org.pbl4.pbl4_be.enums.FirstMoveOption;
-import org.pbl4.pbl4_be.enums.RoomStatusTypes;
+import org.pbl4.pbl4_be.enums.GameStatus;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +23,7 @@ public class Room {
     private final List<Player> spectators;
     private List<Game> games;
     private int nextGameId;
-    private RoomStatusTypes roomStatusTypes;
+    private GameStatus roomStatusTypes;
 
     public Room(String roomCode, ConfigGameDTO configGameDTO) {
         this.roomCode = roomCode;
@@ -31,11 +32,10 @@ public class Room {
         this.players = new ArrayList<>();
         this.spectators = new ArrayList<>();
         this.nextGameId = 1;
-        this.roomStatusTypes = RoomStatusTypes.GAME_NOT_STARTED;
+        this.roomStatusTypes = GameStatus.NOT_STARTED;
     }
 
     public Game addGame() {
-
         Game newGame = new Game(roomCode, nextGameId, firstMove());
         games.add(newGame);
         nextGameId++;
@@ -43,7 +43,7 @@ public class Room {
     }
 
     public boolean isEnd() {
-        return roomStatusTypes == RoomStatusTypes.GAME_ENDED;
+        return roomStatusTypes == GameStatus.ENDED;
     }
 
     public Map.Entry<String, String> firstMove() {
@@ -72,9 +72,16 @@ public class Room {
         return game.isEnd() ? null : game;
     }
 
+    public Game getLastGame() {
+        if(games.isEmpty()) {
+            return null;
+        }
+        return games.get(games.size() - 1);
+    }
+
     public boolean checkPlayerExist(String playerId) {
         for (Player player : players) {
-            if (player.getPlayerId().equals(playerId)) {
+            if (player.getPlayerId().equals(playerId) && !player.isLeaveRoom()) {
                 return true;
             }
         }
@@ -93,11 +100,17 @@ public class Room {
         }
         players.add(player);
         if (isFull()) {
-            setRoomStatusTypes(RoomStatusTypes.GAME_STARTED);
+            setRoomStatusTypes(GameStatus.STARTED);
         }
     }
 
     public boolean checkFull() {
+        for (Player player : players) {
+            if (player.isLeaveRoom()) {
+                return false;
+            }
+        }
+
         return players.size() == MAX_PLAYER;
     }
 
@@ -107,7 +120,7 @@ public class Room {
 
     public boolean checkSpectatorExist(String playerId) {
         for (Player player : spectators) {
-            if (player.getPlayerId().equals(playerId)) {
+            if (player.getPlayerId().equals(playerId) && !player.isLeaveRoom()) {
                 return true;
             }
         }
@@ -116,14 +129,23 @@ public class Room {
     }
 
     public void removePlayer(String playerId) {
-        players.removeIf(player -> player.getPlayerId().equals(playerId));
-        if(players.isEmpty() && roomStatusTypes == RoomStatusTypes.GAME_STARTED) {
-            setRoomStatusTypes(RoomStatusTypes.GAME_ENDED);
+        players.forEach(player -> {
+            if(player.getPlayerId().equals(playerId)) {
+                player.setLeaveRoom(true);
+            }
+        } );
+
+        if(players.isEmpty() && roomStatusTypes == GameStatus.STARTED) {
+            setRoomStatusTypes(GameStatus.ENDED);
         }
     }
 
     public void removeSpectator(String playerId) {
-        spectators.removeIf(player -> player.getPlayerId().equals(playerId));
+        spectators.forEach(player -> {
+            if(player.getPlayerId().equals(playerId)) {
+                player.setLeaveRoom(true);
+            }
+        });
     }
 
     public void startGame() {
@@ -131,7 +153,8 @@ public class Room {
     }
 
     public void setEnd() {
-        this.roomStatusTypes = RoomStatusTypes.GAME_ENDED;
+        this.roomStatusTypes = GameStatus.ENDED;
 
     }
+
 }
