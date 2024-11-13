@@ -1,6 +1,6 @@
 package org.pbl4.pbl4_be.ws.controller;
 
-import org.pbl4.pbl4_be.controller.dto.ConfigGameDTO;
+import org.pbl4.pbl4_be.controllers.dto.ConfigGameDTO;
 import org.pbl4.pbl4_be.controller.dto.JoinRoomResponse;
 import org.pbl4.pbl4_be.controllers.dto.GameState;
 import org.pbl4.pbl4_be.controllers.dto.RoomResponse;

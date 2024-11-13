@@ -2,7 +2,7 @@ package org.pbl4.pbl4_be.models;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.pbl4.pbl4_be.controller.dto.ConfigGameDTO;
+import org.pbl4.pbl4_be.controllers.dto.ConfigGameDTO;
 import org.pbl4.pbl4_be.enums.FirstMoveOption;
 import org.pbl4.pbl4_be.enums.GameStatus;
 
