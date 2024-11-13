@@ -1,4 +1,4 @@
-package org.pbl4.pbl4_be.controller.exception;
+package org.pbl4.pbl4_be.controllers.exception;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

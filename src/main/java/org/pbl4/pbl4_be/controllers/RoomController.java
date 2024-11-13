@@ -1,14 +1,14 @@
-package org.pbl4.pbl4_be.controller;
+package org.pbl4.pbl4_be.controllers;
 
-import org.pbl4.pbl4_be.controller.dto.GameState;
-import org.pbl4.pbl4_be.controller.dto.RoomResponse;
-import org.pbl4.pbl4_be.controller.exception.BadRequestException;
-import org.pbl4.pbl4_be.controller.exception.PlayerAlreadyInRoomException;
+import org.pbl4.pbl4_be.controllers.dto.GameState;
+import org.pbl4.pbl4_be.controllers.dto.RoomResponse;
+import org.pbl4.pbl4_be.controllers.exception.BadRequestException;
+import org.pbl4.pbl4_be.controllers.exception.PlayerAlreadyInRoomException;
 import org.pbl4.pbl4_be.enums.FirstMoveOption;
 import org.pbl4.pbl4_be.enums.ParticipantType;
 import org.pbl4.pbl4_be.models.Player;
 import org.pbl4.pbl4_be.models.Room;
-import org.pbl4.pbl4_be.service.GameRoomManager;
+import org.pbl4.pbl4_be.services.GameRoomManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,7 +24,7 @@ import java.util.logging.Logger;
 public class RoomController {
     private final GameRoomManager gameRoomManager;
     private final SimpMessagingTemplate messagingTemplate;
-    private Logger logger = Logger.getLogger(RoomController.class.getName());
+    private final Logger logger = Logger.getLogger(RoomController.class.getName());
 
     @Autowired
     public RoomController(GameRoomManager gameRoomManager, SimpMessagingTemplate messagingTemplate) {
