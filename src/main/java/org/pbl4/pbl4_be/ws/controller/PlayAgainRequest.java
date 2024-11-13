@@ -1,4 +1,4 @@
-package org.pbl4.pbl4_be.controllers.exception;
+package org.pbl4.pbl4_be.ws.controller;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,7 +9,6 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class BaseException extends RuntimeException {
-    private int code;
-    private String message;
+public class PlayAgainRequest {
+    private String playerId;
 }

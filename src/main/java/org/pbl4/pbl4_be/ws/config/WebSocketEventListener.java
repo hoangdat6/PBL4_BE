@@ -1,4 +1,4 @@
-package org.pbl4.pbl4_be.config;
+package org.pbl4.pbl4_be.ws.config;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
