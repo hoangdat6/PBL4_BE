@@ -8,7 +8,7 @@ import lombok.Setter;
 public class GameMove {
     private int row;
     private int col;
-    private byte nthMove;
+    private short nthMove;
     private boolean isWin;
 
     public GameMove() {

@@ -1,8 +1,8 @@
-package org.pbl4.pbl4_be.controller;
+package org.pbl4.pbl4_be.controllers;
 
 import org.pbl4.pbl4_be.models.Game;
 import org.pbl4.pbl4_be.models.Room;
-import org.pbl4.pbl4_be.service.GameRoomManager;
+import org.pbl4.pbl4_be.services.GameRoomManager;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

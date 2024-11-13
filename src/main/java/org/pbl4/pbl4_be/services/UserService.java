@@ -1,8 +1,7 @@
-package org.pbl4.pbl4_be.service;
+package org.pbl4.pbl4_be.services;
 
 import org.pbl4.pbl4_be.models.User;
 import org.pbl4.pbl4_be.repositories.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
