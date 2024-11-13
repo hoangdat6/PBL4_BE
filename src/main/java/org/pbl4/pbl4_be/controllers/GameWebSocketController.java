@@ -1,12 +1,12 @@
-package org.pbl4.pbl4_be.controller;
+package org.pbl4.pbl4_be.controllers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.pbl4.pbl4_be.controller.dto.GameState;
+import org.pbl4.pbl4_be.controllers.dto.GameState;
 import org.pbl4.pbl4_be.models.GameMove;
 import org.pbl4.pbl4_be.models.Game;
 import org.pbl4.pbl4_be.models.Room;
-import org.pbl4.pbl4_be.service.GameRoomManager;
+import org.pbl4.pbl4_be.services.GameRoomManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;

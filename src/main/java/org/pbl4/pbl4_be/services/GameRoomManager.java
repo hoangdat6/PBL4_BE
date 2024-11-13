@@ -1,4 +1,4 @@
-package org.pbl4.pbl4_be.service;
+package org.pbl4.pbl4_be.services;
 
 import org.pbl4.pbl4_be.enums.FirstMoveOption;
 import org.pbl4.pbl4_be.models.Room;

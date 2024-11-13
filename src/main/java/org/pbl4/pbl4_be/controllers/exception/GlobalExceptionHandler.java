@@ -1,6 +1,6 @@
-package org.pbl4.pbl4_be.controller.exception;
+package org.pbl4.pbl4_be.controllers.exception;
 
-import org.pbl4.pbl4_be.controller.dto.ErrorDTO;
+import org.pbl4.pbl4_be.controllers.dto.ErrorDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -29,5 +29,7 @@ public class GlobalExceptionHandler {
         // Trả về mã trạng thái 409 Conflict với thông báo lỗi
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.CONFLICT);
     }
+
+
 
 }
