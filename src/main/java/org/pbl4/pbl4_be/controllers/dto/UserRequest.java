@@ -1,4 +1,4 @@
-package org.pbl4.pbl4_be.controllers.exception;
+package org.pbl4.pbl4_be.controller.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,7 +9,8 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class BaseException extends RuntimeException {
-    private int code;
-    private String message;
+public class UserRequest {
+    private Long id;
+    private String email;
+    private String password;
 }
