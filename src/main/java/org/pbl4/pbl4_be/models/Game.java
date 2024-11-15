@@ -3,6 +3,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.pbl4.pbl4_be.enums.GameStatus;
 
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -10,7 +11,7 @@ import java.util.TimeZone;
 
 @Getter
 @Setter
-public class Game {
+public class  Game {
     private Integer gameId;
     private String roomId;
     private Board board;
@@ -22,6 +23,7 @@ public class Game {
     private Long winnerId;
     private List<GameMove> moveList;
     private GameStatus gameStatus;
+    private LocalTime time;
 
 
     public Game(String roomId, Integer gameId, Map.Entry<Long, Long> players) {
@@ -36,6 +38,7 @@ public class Game {
         this.winnerId = null;
         this.moveList = new ArrayList<>();
         this.gameStatus = GameStatus.STARTED;
+        this.time = LocalTime.now();
     }
 
     public void increaseMoveCnt() {
@@ -45,7 +48,12 @@ public class Game {
     public boolean  processMove(GameMove move) {
         // Xử lý nước đi của người chơi
         board.setMove(move.getRow(), move.getCol(), (byte) (move.getNthMove() % 2));
+        setTime();
         return board.checkWin(move.getRow(), move.getCol(), (byte) (move.getNthMove() % 2));
+    }
+
+    public void setTime(){
+        this.time = LocalTime.now();
     }
 
     public boolean isEnd() {

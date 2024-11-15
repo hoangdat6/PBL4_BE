@@ -3,6 +3,9 @@ package org.pbl4.pbl4_be.models;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.Duration;
+import java.util.Date;
+
 @Getter
 @Setter
 public class GameMove {
@@ -10,6 +13,7 @@ public class GameMove {
     private int col;
     private short nthMove;
     private boolean isWin;
+    private Duration duration;
 
     public GameMove() {
         // No-argument constructor

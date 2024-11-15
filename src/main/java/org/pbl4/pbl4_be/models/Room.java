@@ -24,6 +24,8 @@ public class Room {
     private List<Game> games;
     private int nextGameId;
     private GameStatus roomStatusTypes;
+    private String password;
+    private boolean isPrivate;
 
     public Room(String roomCode, ConfigGameDTO configGameDTO) {
         this.roomCode = roomCode;
