@@ -11,8 +11,10 @@ import org.pbl4.pbl4_be.enums.ParticipantType;
 import org.pbl4.pbl4_be.models.Game;
 import org.pbl4.pbl4_be.models.Player;
 import org.pbl4.pbl4_be.models.Room;
+import org.pbl4.pbl4_be.models.User;
 import org.pbl4.pbl4_be.models.UserDetailsImpl;
 import org.pbl4.pbl4_be.services.GameRoomManager;
+import org.pbl4.pbl4_be.services.UserService;
 import org.pbl4.pbl4_be.ws.services.MessagingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -32,11 +34,13 @@ public class RoomController {
     private final org.pbl4.pbl4_be.services.GameRoomManager gameRoomManager;
     private final SimpMessagingTemplate messagingTemplate;
     private Logger logger = Logger.getLogger(RoomController.class.getName());
+    private final UserService userService;
     private final MessagingService messagingService;
     @Autowired
-    public RoomController(GameRoomManager gameRoomManager, SimpMessagingTemplate messagingTemplate, MessagingService messagingService) {
+    public RoomController(GameRoomManager gameRoomManager, SimpMessagingTemplate messagingTemplate, MessagingService messagingService, UserService userService) {
         this.gameRoomManager = gameRoomManager;
         this.messagingTemplate = messagingTemplate;
+        this.userService = userService;
         this.messagingService = messagingService;
     }
 
@@ -60,7 +64,13 @@ public class RoomController {
 
         //  nếu phòng chưa full thì thêm player vào phòng
         if (!room.checkFull() && !room.checkPlayerExist(userId)) {
-            room.addPlayer(new Player(userId));
+            User user = userService.findById(userId).orElseThrow(() -> new BadRequestException("User not found"));
+
+            room.addPlayer(Player.builder().
+                    playerId(user.getId())
+                    .playerName(user.getName())
+                    .email(user.getEmail()).
+                    build());
         }
 
         if (room.checkFull() && room.getGamePlaying() == null) {
