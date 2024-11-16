@@ -36,6 +36,7 @@ public class RoomController {
     private Logger logger = Logger.getLogger(RoomController.class.getName());
     private final UserService userService;
     private final MessagingService messagingService;
+
     @Autowired
     public RoomController(GameRoomManager gameRoomManager, SimpMessagingTemplate messagingTemplate, MessagingService messagingService, UserService userService) {
         this.gameRoomManager = gameRoomManager;
@@ -66,29 +67,35 @@ public class RoomController {
         if (!room.checkFull() && !room.checkPlayerExist(userId)) {
             User user = userService.findById(userId).orElseThrow(() -> new BadRequestException("User not found"));
 
-            room.addPlayer(Player.builder().
-                    playerId(user.getId())
+            room.addPlayer(Player.builder()
+                    .playerId(user.getId())
                     .playerName(user.getName())
-                    .email(user.getEmail()).
-                    build());
+                    .email(user.getEmail())
+                    .build()
+            );
         }
 
-        if (room.checkFull() && room.getGamePlaying() == null) {
-            room.startGame();
-        }   
-
-        System.out.println("Số lượng game trong room: " + room.getGames().size());
-
-        if(room.getGamePlaying() != null) {
+        Game lastGame = room.getLastGame();
+        if (room.checkFull()) {
+            /*
+                * Nếu phòng đã full và game chưa bắt đầu thì bắt đầu game
+                * Nếu game đang chờ chơi thì bắt đầu game
+                * Nếu không thì gửi lại trạng thái của game trước đó
+             */
+            if(lastGame.getGameStatus() == GameStatus.NOT_STARTED || lastGame.getGameStatus() == GameStatus.PENDING) {
+                room.startGame();
+            }
             GameState gameState = GameState.builder()
                     .roomCode(roomCode)
-                    .startPlayerId(room.getGamePlaying().getFirstPlayerId())
-                    .nthMove(room.getGamePlaying().getNthMove())
+                    .startPlayerId(lastGame.getFirstPlayerId())
+                    .nthMove(lastGame.getNthMove())
+                    .lastMove(lastGame.getLastMove())
                     .build();
-            gameState.setBoardState(room.getGamePlaying().getBoard());
-
+            gameState.setBoardState(lastGame.getBoard());
             messagingTemplate.convertAndSend("/topic/game-state/" + roomCode, gameState);
         }
+
+        System.out.println("Số lượng game trong room: " + room.getGames().size());
 
         JoinRoomResponse response = JoinRoomResponse.builder()
                 .roomCode(roomCode)
@@ -125,6 +132,11 @@ public class RoomController {
         while (gameRoomManager.checkRoomExist(codeRandom)) {
             codeRandom = randomRoomCode();
         }
+
+        /*
+         * Mặc định tạo game lúc tạo phòng với người chơi đầu tiên là người tạo phòng
+         * Game này sẽ được bắt đầu khi phòng đã đủ người chơi
+         */
         Room room = gameRoomManager.createRoom(codeRandom, configGameDTO);
 
         logger.info("Room created with code: " + room.getRoomCode());
@@ -160,18 +172,31 @@ public class RoomController {
             throw new BadRequestException("Room not found");
         }
 
-        // nếu player mới tạo phòng thì xóa phòng
-        if (room.getGamePlaying() == null) {
+        logger.info("Số lượng phòng trong hệ thống: " + gameRoomManager.getRoomsSize());
+
+        /*
+            * Có 3 trường hợp xảy ra:
+            * 1. Người chơi vừa tạo phòng và không có người chơi nào khác thì xóa phòng
+            * 2. Người chơi đang chơi game và rời phòng -> lưu lại kết quả, kết thúc game, thông báo người thắng
+            * 3. Ván đấu kết thúc và người chơi rời phòng
+         */
+        // 1
+        if (room.getPlayers().size() == 1) {
             gameRoomManager.removeRoom(roomCode);
+            logger.info("Số lượng phòng trong hệ thống: " + gameRoomManager.getRoomsSize());
             return ResponseEntity.status(HttpStatus.OK).body(RoomResponse.builder().roomCode(roomCode).build());
         }
 
+        // 2
         if (room.checkPlayerExist(userId)) {
             room.removePlayer(userId);
             Game gamePlaying = room.getGamePlaying();
             if (gamePlaying != null && gamePlaying.getGameStatus() == GameStatus.STARTED) {
                 gamePlaying.setWinnerId(gamePlaying.getFirstPlayerId().equals(userId) ? gamePlaying.getSecondPlayerId() : gamePlaying.getFirstPlayerId());
                 gamePlaying.setGameStatus(GameStatus.ENDED);
+                // save game result here
+
+                // send game end message
                 messagingService.sendGameEndMessage(roomCode, gamePlaying.getWinnerId());
             }
         } else if (room.checkSpectatorExist(userId)) {

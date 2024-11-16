@@ -22,10 +22,14 @@ public class GameRoomManager {
         return instance;
     }
 
+    /*
+     * Khi tạo room, tạo luôn game đầu tiên cho room đó
+     */
 
     public Room createRoom(String roomId, ConfigGameDTO configGameDTO) {
         Room room = new Room(roomId, configGameDTO);
         rooms.put(roomId, room);
+        room.addGame();
         return room;
     }
 
@@ -54,5 +58,9 @@ public class GameRoomManager {
 
     public void removeRoom(String roomId) {
         rooms.remove(roomId);
+    }
+
+    public Integer getRoomsSize() {
+        return rooms.size();
     }
 }
