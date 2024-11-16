@@ -3,7 +3,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.pbl4.pbl4_be.enums.GameStatus;
 
-import java.time.LocalTime;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -18,12 +18,13 @@ public class  Game {
     private Long firstPlayerId;
     private Long secondPlayerId;
     private short nthMove;
-    private TimeZone startTime;
-    private TimeZone endTime;
+    private LocalDateTime startTime;
+    private LocalDateTime endTime;
+    private LocalDateTime createdAt;
     private Long winnerId;
     private List<GameMove> moveList;
     private GameStatus gameStatus;
-    private LocalTime time;
+    private LocalDateTime time;
     private boolean isPlayAgain;
 
 
@@ -32,12 +33,12 @@ public class  Game {
         this.gameId = gameId;
         this.board = new Board(16, 5);
         this.nthMove = 0;
-        this.startTime = TimeZone.getTimeZone("UTC");
-        this.endTime = TimeZone.getTimeZone("UTC");
+        this.startTime = LocalDateTime.now();
+        this.endTime = null;
         this.winnerId = null;
         this.moveList = new ArrayList<>();
         this.gameStatus = GameStatus.NOT_STARTED;
-        this.time = LocalTime.now();
+        this.createdAt = LocalDateTime.now();
         this.isPlayAgain = false;
     }
 
@@ -53,7 +54,7 @@ public class  Game {
     }
 
     public void setTime(){
-        this.time = LocalTime.now();
+        this.time = LocalDateTime.now();
     }
 
     public boolean isEnd() {
@@ -66,6 +67,7 @@ public class  Game {
     }
 
     public void startGame() {
+        this.time = LocalDateTime.now();
         this.gameStatus = GameStatus.STARTED;
     }
 

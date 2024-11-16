@@ -23,8 +23,12 @@ public class GameMoveDB {
     private Integer duration;
 
     GameMoveDB(GameMove gameMove){
-        this.move = gameMove.getRow() + "," + gameMove.getCol();
-        this.duration = (int) gameMove.getDuration().getSeconds();
+        this.duration = gameMove.getDuration();
+        this.move = gameMove.getMove();
+
     }
 
+    public GameMoveDB() {
+
+    }
 }

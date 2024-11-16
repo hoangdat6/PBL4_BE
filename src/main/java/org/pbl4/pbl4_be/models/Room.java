@@ -16,7 +16,7 @@ import static org.pbl4.pbl4_be.Constants.MAX_PLAYER;
 @Getter
 @Setter
 public class Room {
-    private String roomId;
+    private Long roomId;
     private String roomCode;
     private ConfigGameDTO configGameDTO;
     private final List<Player> players;

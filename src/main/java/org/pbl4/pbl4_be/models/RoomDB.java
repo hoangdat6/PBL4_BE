@@ -43,10 +43,10 @@ public class RoomDB {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<GameDB> games;
 
-    RoomDB(Room room){
+    public RoomDB(Room room){
         this.code = room.getRoomCode();
         this.password = room.getPassword();
         this.player1Id = room.getPlayers().get(0).getPlayerId();
@@ -59,4 +59,13 @@ public class RoomDB {
         this.createdAt = LocalDateTime.now();
     }
 
+    public void addGame(Game game){
+        GameDB gameDB = new GameDB(game);
+        gameDB.setRoom(this);
+        this.games.add(gameDB);
+    }
+
+    public RoomDB() {
+
+    }
 }
