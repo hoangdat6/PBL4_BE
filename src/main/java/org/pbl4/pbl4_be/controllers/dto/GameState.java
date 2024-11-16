@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.pbl4.pbl4_be.enums.ParticipantType;
 import org.pbl4.pbl4_be.models.Board;
+import org.pbl4.pbl4_be.models.GameMove;
 
 @Getter
 @Setter
@@ -14,6 +15,7 @@ public class GameState {
     private String roomCode;
     private Long startPlayerId;
     private short nthMove;
+    private GameMove lastMove;
     private BoardDTO boardState;
 
     public void setBoardState(Board board) {

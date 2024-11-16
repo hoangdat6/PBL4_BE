@@ -38,7 +38,7 @@ public class Room {
     }
 
     public Game addGame() {
-        Game newGame = new Game(roomCode, nextGameId, firstMove());
+        Game newGame = new Game(roomCode, nextGameId);
         games.add(newGame);
         nextGameId++;
         return newGame;
@@ -49,16 +49,25 @@ public class Room {
     }
 
     public Map.Entry<Long, Long> firstMove() {
-        if(games.isEmpty()) {
+        if(games.size() == 1) {
             if (configGameDTO.getFirstMoveOption() == FirstMoveOption.RANDOM) {
                 return Math.random() < 0.5 ? getPlayers(0, 1) : getPlayers(1, 0);
+            } else {
+                if (configGameDTO.getFirstMoveOption() == FirstMoveOption.ROOM_OWNER) {
+                    return getPlayers(0, 1);
+                } else {
+                    return getPlayers(1, 0);
+                }
             }
-
-            return configGameDTO.getFirstMoveOption() == FirstMoveOption.ROOM_OWNER ? getPlayers(0, 1) : getPlayers(1, 0);
         }else {
-            return games.get(games.size() - 1).getFirstPlayerId().equals(players.get(0).getPlayerId()) ?
+            return getGamePrevious().getFirstPlayerId().equals(players.get(0).getPlayerId()) ?
                     getPlayers(1, 0) : getPlayers(0, 1);
         }
+
+    }
+
+    private Game getGamePrevious() {
+        return games.get(games.size() - 2);
     }
 
     public Map.Entry<Long, Long> getPlayers(int first, int last) {
@@ -67,9 +76,6 @@ public class Room {
 
 
     public Game getGamePlaying() {
-        if(games.isEmpty()) {
-            return null;
-        }
         Game game = games.get(games.size() - 1);
         return game.isEnd() ? null : game;
     }
@@ -151,12 +157,18 @@ public class Room {
     }
 
     public void startGame() {
-        this.addGame();
+        Game game = getLastGame();
+        game.startGame();
+        game.setFirstAndSecondPlayerId(firstMove());
+        game.setGameStatus(GameStatus.STARTED);
     }
 
     public void setEnd() {
         this.roomStatusTypes = GameStatus.ENDED;
+    }
 
+    public boolean isStarted() {
+        return roomStatusTypes == GameStatus.STARTED;
     }
 
 }
