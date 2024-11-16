@@ -17,6 +17,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.pbl4.pbl4_be.security.jwt.AuthEntryPointJwt;
 import org.pbl4.pbl4_be.security.jwt.AuthTokenFilter;
 import org.pbl4.pbl4_be.services.UserDetailsServiceImpl;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 @EnableMethodSecurity  // Cho phép các annotation bảo mật ở cấp độ phương thức như @PreAuthorize
@@ -55,6 +58,20 @@ public class WebSecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.addAllowedOriginPattern("http://localhost:3000"); // Thêm frontend URL
+        configuration.addAllowedMethod("*"); // Cho phép tất cả các phương thức HTTP
+        configuration.addAllowedHeader("*"); // Cho phép tất cả các header
+        configuration.setAllowCredentials(true); // Cho phép thông tin xác thực (cookies)
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration); // Áp dụng cho tất cả các URL
+
+        return source;
+    }
+
     // Cấu hình chuỗi lọc bảo mật
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -63,7 +80,8 @@ public class WebSecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Không tạo session
                 .authorizeHttpRequests(auth -> // Cấu hình quyền truy cập
                         auth.requestMatchers("/api/auth/**").permitAll() // Cho phép truy cập vào các endpoint auth
-                                .requestMatchers("/api/test/**").permitAll() // Cho phép truy cập vào các endpoint thử nghiệm
+                                .requestMatchers("/api/room/**").permitAll() // Cho phép truy cập vào các endpoint thử nghiệm
+                                .requestMatchers("/ws/**").permitAll()
                                 .anyRequest().authenticated() // Yêu cầu xác thực cho tất cả các yêu cầu còn lại
                 );
 

@@ -14,17 +14,17 @@ public class Game {
     private Integer gameId;
     private String roomId;
     private Board board;
-    private String firstPlayerId;
-    private String secondPlayerId;
+    private Long firstPlayerId;
+    private Long secondPlayerId;
     private short nthMove;
     private TimeZone startTime;
     private TimeZone endTime;
-    private String winnerId;
+    private Long winnerId;
     private List<GameMove> moveList;
     private GameStatus gameStatus;
 
 
-    public Game(String roomId, Integer gameId, Map.Entry<String, String> players) {
+    public Game(String roomId, Integer gameId, Map.Entry<Long, Long> players) {
         this.roomId = roomId;
         this.gameId = gameId;
         this.board = new Board(16, 5);

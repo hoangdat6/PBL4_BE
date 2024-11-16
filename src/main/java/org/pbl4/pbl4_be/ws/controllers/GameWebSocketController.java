@@ -1,4 +1,4 @@
-package org.pbl4.pbl4_be.ws.controller;
+package org.pbl4.pbl4_be.ws.controllers;
 
 import org.pbl4.pbl4_be.enums.GameStatus;
 import org.pbl4.pbl4_be.enums.PlayAgainCode;
@@ -6,6 +6,7 @@ import org.pbl4.pbl4_be.models.GameMove;
 import org.pbl4.pbl4_be.models.Game;
 import org.pbl4.pbl4_be.models.Room;
 import org.pbl4.pbl4_be.services.GameRoomManager;
+import org.pbl4.pbl4_be.ws.services.MessagingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -19,11 +20,13 @@ import org.springframework.stereotype.Controller;
 public class GameWebSocketController {
     private final GameRoomManager gameRoomManager;
     private final SimpMessagingTemplate messagingTemplate;
+    private final MessagingService messagingService;
 
     @Autowired
-    public GameWebSocketController(GameRoomManager gameRoomManager, SimpMessagingTemplate messagingTemplate) {
+    public GameWebSocketController(GameRoomManager gameRoomManager, SimpMessagingTemplate messagingTemplate, MessagingService messagingService) {
         this.gameRoomManager = gameRoomManager;
         this.messagingTemplate = messagingTemplate;
+        this.messagingService = messagingService;
     }
 
     @MessageMapping("/move/{roomCode}")
@@ -46,17 +49,16 @@ public class GameWebSocketController {
             }
 
             game.setGameStatus(GameStatus.ENDED);
-            messagingTemplate.convertAndSend("/topic/game-end/" + roomCode, ResponseEntity.ok(game.getWinnerId()));
+            messagingService.sendGameEndMessage(roomCode, game.getWinnerId());
         }
 
         if (game.getBoard().isFull()) {
             game.setGameStatus(GameStatus.ENDED);
-            messagingTemplate.convertAndSend("/topic/game-end/" + roomCode, ResponseEntity.ok(null));
+            messagingService.sendGameEndMessage(roomCode, null);
         }
 
         return move;
     }
-
 
     @MessageMapping("/play-again/{roomCode}")
     @SendTo("/topic/play-again/{roomCode}")
