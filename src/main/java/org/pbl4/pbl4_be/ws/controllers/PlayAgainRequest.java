@@ -1,4 +1,4 @@
-package org.pbl4.pbl4_be.ws.controller;
+package org.pbl4.pbl4_be.ws.controllers;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -10,5 +10,5 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PlayAgainRequest {
-    private String playerId;
+    private Long playerId;
 }

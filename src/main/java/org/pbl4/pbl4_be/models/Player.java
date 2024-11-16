@@ -10,11 +10,11 @@ import java.security.Principal;
 @Getter
 @NoArgsConstructor
 public class Player {
-    private String playerId;
+    private Long playerId;
     private String playerName;
     private boolean isLeaveRoom;
 
-    public Player(String playerId) {
+    public Player(Long playerId) {
         this.playerId = playerId;
 
     }

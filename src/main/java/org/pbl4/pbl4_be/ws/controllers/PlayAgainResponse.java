@@ -1,4 +1,4 @@
-package org.pbl4.pbl4_be.ws.controller;
+package org.pbl4.pbl4_be.ws.controllers;
 
 
 import lombok.*;
@@ -11,6 +11,6 @@ import lombok.*;
 public class PlayAgainResponse {
     private String code;
     private String roomCode;
-    private String playerId;
+    private Long playerId;
     private String message;
 }

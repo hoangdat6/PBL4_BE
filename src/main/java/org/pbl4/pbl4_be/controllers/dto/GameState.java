@@ -12,7 +12,7 @@ import org.pbl4.pbl4_be.models.Board;
 @Builder
 public class GameState {
     private String roomCode;
-    private String startPlayerId;
+    private Long startPlayerId;
     private short nthMove;
     private BoardDTO boardState;
 
