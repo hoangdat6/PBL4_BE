@@ -8,12 +8,10 @@ import org.pbl4.pbl4_be.controllers.exception.BadRequestException;
 import org.pbl4.pbl4_be.controllers.exception.PlayerAlreadyInRoomException;
 import org.pbl4.pbl4_be.enums.GameStatus;
 import org.pbl4.pbl4_be.enums.ParticipantType;
-import org.pbl4.pbl4_be.models.Game;
-import org.pbl4.pbl4_be.models.Player;
-import org.pbl4.pbl4_be.models.Room;
-import org.pbl4.pbl4_be.models.User;
-import org.pbl4.pbl4_be.models.UserDetailsImpl;
+import org.pbl4.pbl4_be.models.*;
+import org.pbl4.pbl4_be.repositories.RoomDBRepository;
 import org.pbl4.pbl4_be.services.GameRoomManager;
+import org.pbl4.pbl4_be.services.RoomDBService;
 import org.pbl4.pbl4_be.services.UserService;
 import org.pbl4.pbl4_be.ws.services.MessagingService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,12 +35,15 @@ public class RoomController {
     private final UserService userService;
     private final MessagingService messagingService;
 
+    private final RoomDBService roomDBService;
+
     @Autowired
-    public RoomController(GameRoomManager gameRoomManager, SimpMessagingTemplate messagingTemplate, MessagingService messagingService, UserService userService) {
+    public RoomController(GameRoomManager gameRoomManager, SimpMessagingTemplate messagingTemplate, MessagingService messagingService, UserService userService, RoomDBService roomDBService) {
         this.gameRoomManager = gameRoomManager;
         this.messagingTemplate = messagingTemplate;
         this.userService = userService;
         this.messagingService = messagingService;
+        this.roomDBService = roomDBService;
     }
 
     // Xử lý yêu cầu tham gia phòng
@@ -84,6 +85,9 @@ public class RoomController {
              */
             if(lastGame.getGameStatus() == GameStatus.NOT_STARTED || lastGame.getGameStatus() == GameStatus.PENDING) {
                 room.startGame();
+                RoomDB roomDB = new RoomDB(room);
+                roomDB = roomDBService.save(roomDB);
+                room.setRoomId(roomDB.getId());
             }
             GameState gameState = GameState.builder()
                     .roomCode(roomCode)
