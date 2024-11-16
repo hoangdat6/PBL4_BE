@@ -46,7 +46,7 @@ public class Room {
         return roomStatusTypes == GameStatus.ENDED;
     }
 
-    public Map.Entry<String, String> firstMove() {
+    public Map.Entry<Long, Long> firstMove() {
         if(games.isEmpty()) {
             if (configGameDTO.getFirstMoveOption() == FirstMoveOption.RANDOM) {
                 return Math.random() < 0.5 ? getPlayers(0, 1) : getPlayers(1, 0);
@@ -59,7 +59,7 @@ public class Room {
         }
     }
 
-    public Map.Entry<String, String> getPlayers(int first, int last) {
+    public Map.Entry<Long, Long> getPlayers(int first, int last) {
         return Map.entry(players.get(first).getPlayerId(), players.get(last).getPlayerId());
     }
 
@@ -79,7 +79,7 @@ public class Room {
         return games.get(games.size() - 1);
     }
 
-    public boolean checkPlayerExist(String playerId) {
+    public boolean checkPlayerExist(Long playerId) {
         for (Player player : players) {
             if (player.getPlayerId().equals(playerId) && !player.isLeaveRoom()) {
                 return true;
@@ -118,7 +118,7 @@ public class Room {
         spectators.add(player);
     }
 
-    public boolean checkSpectatorExist(String playerId) {
+    public boolean checkSpectatorExist(Long playerId) {
         for (Player player : spectators) {
             if (player.getPlayerId().equals(playerId) && !player.isLeaveRoom()) {
                 return true;
@@ -128,7 +128,7 @@ public class Room {
         return false;
     }
 
-    public void removePlayer(String playerId) {
+    public void removePlayer(Long playerId) {
         players.forEach(player -> {
             if(player.getPlayerId().equals(playerId)) {
                 player.setLeaveRoom(true);
@@ -140,7 +140,7 @@ public class Room {
         }
     }
 
-    public void removeSpectator(String playerId) {
+    public void removeSpectator(Long playerId) {
         spectators.forEach(player -> {
             if(player.getPlayerId().equals(playerId)) {
                 player.setLeaveRoom(true);

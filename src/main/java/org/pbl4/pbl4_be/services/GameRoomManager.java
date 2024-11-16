@@ -37,7 +37,7 @@ public class GameRoomManager {
         return isRoomExist(roomId);
     }
 
-    public String getRoomCodeByPlayerId(String playerId) {
+    public String getRoomCodeByPlayerId(Long playerId) {
         for (Room room : rooms.values()) {
             if ( !room.isEnd()
                     && room.checkPlayerExist(playerId)) {

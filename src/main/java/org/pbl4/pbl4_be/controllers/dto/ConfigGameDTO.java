@@ -9,7 +9,6 @@ import org.pbl4.pbl4_be.enums.FirstMoveOption;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ConfigGameDTO {
-    private String ownerId;
     private int timeLimitForMove;
     private int timeLimitForMatch;
     private FirstMoveOption firstMoveOption;
