@@ -13,7 +13,7 @@ public class GameMove {
     private int col;
     private short nthMove;
     private boolean isWin;
-    private Duration duration;
+    private Integer duration;
 
     public GameMove() {
         // No-argument constructor
@@ -24,6 +24,10 @@ public class GameMove {
         this.col = col;
         this.nthMove = nthMove;
         this.isWin = false;
+    }
+
+    public String getMove(){
+        return this.row + "," + this.col;
     }
 
 }

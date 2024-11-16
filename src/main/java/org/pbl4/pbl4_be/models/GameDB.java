@@ -4,7 +4,9 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.TimeZone;
 
 @Entity
 @Getter
@@ -36,19 +38,25 @@ public class GameDB {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
     // Quan hệ 1-nhiều với Move
-    @OneToMany(mappedBy = "game", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "game", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<GameMoveDB> moves;
 
-    GameDB(Game game){
-//        this.winnerId = game.getWinnerId();
-//        this.startTime = game.getStartTime();
-//        this.endTime = game.getEndTime();
-//        this.firstPlayerId = game.getFirstPlayerId();
-//        this.createdAt = LocalDateTime.now();
-//        this.updatedAt = LocalDateTime.now();
+    public GameDB(Game game){
+        this.winnerId = game.getWinnerId();
+        this.startTime = game.getStartTime();
+        this.endTime = game.getEndTime();
+        this.firstPlayerId = game.getFirstPlayerId();
+        this.createdAt = game.getCreatedAt();
+        this.moves = new ArrayList<>();
+        for(GameMove move : game.getMoveList()){
+            GameMoveDB gameMoveDB = new GameMoveDB(move);
+            gameMoveDB.setGame(this);
+            this.moves.add(gameMoveDB);
+        }
+    }
+
+    public GameDB() {
+
     }
 }
