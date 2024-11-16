@@ -19,13 +19,11 @@ import org.springframework.stereotype.Controller;
 @Controller
 public class GameWebSocketController {
     private final GameRoomManager gameRoomManager;
-    private final SimpMessagingTemplate messagingTemplate;
     private final MessagingService messagingService;
 
     @Autowired
     public GameWebSocketController(GameRoomManager gameRoomManager, SimpMessagingTemplate messagingTemplate, MessagingService messagingService) {
         this.gameRoomManager = gameRoomManager;
-        this.messagingTemplate = messagingTemplate;
         this.messagingService = messagingService;
     }
 
@@ -48,16 +46,20 @@ public class GameWebSocketController {
                 game.setWinnerId(game.getSecondPlayerId());
             }
 
-            game.setGameStatus(GameStatus.ENDED);
+            setGameEnd(room, game);
             messagingService.sendGameEndMessage(roomCode, game.getWinnerId());
         }
 
         if (game.getBoard().isFull()) {
-            game.setGameStatus(GameStatus.ENDED);
+            setGameEnd(room, game);
             messagingService.sendGameEndMessage(roomCode, null);
         }
 
         return move;
+    }
+
+    private void setGameEnd(Room room, Game game) {
+        game.setGameStatus(GameStatus.ENDED);
     }
 
     @MessageMapping("/play-again/{roomCode}")
@@ -68,6 +70,7 @@ public class GameWebSocketController {
 
         if (game.getGameStatus() == GameStatus.ENDED) {
             room.addGame();
+            room.getLastGame().setGameStatus(GameStatus.PENDING);
             return ResponseEntity.ok(PlayAgainResponse.builder().playerId(request.getPlayerId()).roomCode(roomCode).code(PlayAgainCode.PLAY_AGAIN).
                     build());
         } else {

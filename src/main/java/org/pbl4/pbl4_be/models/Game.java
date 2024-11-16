@@ -24,21 +24,21 @@ public class  Game {
     private List<GameMove> moveList;
     private GameStatus gameStatus;
     private LocalTime time;
+    private boolean isPlayAgain;
 
 
-    public Game(String roomId, Integer gameId, Map.Entry<Long, Long> players) {
+    public Game(String roomId, Integer gameId) {
         this.roomId = roomId;
         this.gameId = gameId;
         this.board = new Board(16, 5);
-        this.firstPlayerId = players.getKey();
-        this.secondPlayerId = players.getValue();
         this.nthMove = 0;
         this.startTime = TimeZone.getTimeZone("UTC");
         this.endTime = TimeZone.getTimeZone("UTC");
         this.winnerId = null;
         this.moveList = new ArrayList<>();
-        this.gameStatus = GameStatus.STARTED;
+        this.gameStatus = GameStatus.NOT_STARTED;
         this.time = LocalTime.now();
+        this.isPlayAgain = false;
     }
 
     public void increaseMoveCnt() {
@@ -58,5 +58,22 @@ public class  Game {
 
     public boolean isEnd() {
         return gameStatus == GameStatus.ENDED;
+    }
+
+    public void setFirstAndSecondPlayerId(Map.Entry<Long, Long> players) {
+        this.firstPlayerId = players.getKey();
+        this.secondPlayerId = players.getValue();
+    }
+
+    public void startGame() {
+        this.gameStatus = GameStatus.STARTED;
+    }
+
+
+    public GameMove getLastMove() {
+        if (moveList.isEmpty()) {
+            return null;
+        }
+        return moveList.get(moveList.size() - 1);
     }
 }

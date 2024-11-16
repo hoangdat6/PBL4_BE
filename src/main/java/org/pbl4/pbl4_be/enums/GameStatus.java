@@ -6,7 +6,8 @@ import lombok.Getter;
 public enum GameStatus {
     NOT_STARTED(0),
     STARTED(1),
-    ENDED(2);
+    ENDED(2),
+    PENDING(3);
 
     private final int value;
 
