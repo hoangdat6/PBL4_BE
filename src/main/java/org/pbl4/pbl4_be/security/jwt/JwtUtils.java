@@ -47,10 +47,15 @@ public class JwtUtils {
                 .httpOnly(true)
                 .build();
     }
-    // Xóa JWT cookie
     public ResponseCookie getCleanJwtCookie() {
-        return ResponseCookie.from(jwtCookieName, null).path("/api").build();
+        return ResponseCookie.from(jwtCookieName, "")
+                .path("/")
+                .httpOnly(true)
+//                .secure(true) // Nếu bạn dùng HTTPS
+                .maxAge(0)    // Đặt tuổi thọ cookie là 0 để xóa ngay lập tức
+                .build();
     }
+
 
     // Tạo token từ email
     public String generateTokenFromEmail(String email) {

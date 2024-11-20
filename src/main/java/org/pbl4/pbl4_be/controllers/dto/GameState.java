@@ -17,6 +17,8 @@ public class GameState {
     private short nthMove;
     private GameMove lastMove;
     private BoardDTO boardState;
+    private Long player1Id;
+    private Long player2Id;
 
     public void setBoardState(Board board) {
         Gson gson = new Gson();

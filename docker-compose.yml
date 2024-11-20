@@ -1,22 +1,37 @@
 version: '3.8'
+
 services:
   db:
     image: mysql:8
+    container_name: pbl4-be-db
     environment:
-      MYSQL_DATABASE: carogame
-      MYSQL_USER: yourusername
-      MYSQL_PASSWORD: yourpassword
-      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_ROOT_PASSWORD: dat123
+      MYSQL_DATABASE: pbl4_be
     ports:
-      - "3306:3306"
+      - "1444:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   app:
-    image: pbl4_be_latest1
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/carogame
-      SPRING_DATASOURCE_USERNAME: yourusername
-      SPRING_DATASOURCE_PASSWORD: yourpassword
-    depends_on:
-      - db
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pbl4-be-app
     ports:
       - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db:1444/pbl4_be
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=dat123
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db-data:

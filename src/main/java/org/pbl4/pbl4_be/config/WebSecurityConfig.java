@@ -1,6 +1,7 @@
 package org.pbl4.pbl4_be.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -24,6 +25,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @Configuration
 @EnableMethodSecurity  // Cho phép các annotation bảo mật ở cấp độ phương thức như @PreAuthorize
 public class WebSecurityConfig {
+    @Value("${pbl4.app.feUrl}")
+    private String feUrl;
 
     @Autowired
     private UserDetailsServiceImpl userDetailsService;
@@ -61,7 +64,7 @@ public class WebSecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.addAllowedOriginPattern("http://localhost:3000"); // Thêm frontend URL
+        configuration.addAllowedOriginPattern(feUrl); // Thêm frontend URL
         configuration.addAllowedMethod("*"); // Cho phép tất cả các phương thức HTTP
         configuration.addAllowedHeader("*"); // Cho phép tất cả các header
         configuration.setAllowCredentials(true); // Cho phép thông tin xác thực (cookies)
