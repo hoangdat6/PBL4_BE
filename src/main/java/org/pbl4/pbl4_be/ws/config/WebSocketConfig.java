@@ -1,6 +1,7 @@
 package org.pbl4.pbl4_be.ws.config;
 
 import org.pbl4.pbl4_be.security.jwt.JwtUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
@@ -10,17 +11,15 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @Configuration
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
-    private final JwtUtils jwtUtils;
+    @Value("${pbl4.app.feUrl}")
+    private String feUrl;
 
-    public WebSocketConfig(JwtUtils jwtUtils) {
-        this.jwtUtils = jwtUtils;
-    }
+    public WebSocketConfig() {}
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
-                .setAllowedOrigins("http://localhost:3000")
-//                .addInterceptors(new JwtHandshakeInterceptor(jwtUtils))
+                .setAllowedOrigins(feUrl)
                 .withSockJS()
                 .setSessionCookieNeeded(true); // Bảo đảm gửi cookie với SockJS
     }

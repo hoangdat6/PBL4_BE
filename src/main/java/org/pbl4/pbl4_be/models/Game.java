@@ -27,7 +27,6 @@ public class  Game {
     private LocalDateTime time;
     private boolean isPlayAgain;
 
-
     public Game(String roomId, Integer gameId) {
         this.roomId = roomId;
         this.gameId = gameId;

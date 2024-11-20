@@ -91,7 +91,7 @@ public class AuthController {
         User user = new User(signUpRequest.getEmail(),
                 encoder.encode(signUpRequest.getPassword()), signUpRequest.getName());
 
-        // Mac dinh role la user
+        // Mac dinh role     la user
         Set<Role> roles = new HashSet<>();
         Role userRole = roleRepository.findByName(ERole.ROLE_USER)
                 .orElseThrow(() -> new RuntimeException("Error: Role is not found."));

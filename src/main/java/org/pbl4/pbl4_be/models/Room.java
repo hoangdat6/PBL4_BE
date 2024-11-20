@@ -113,11 +113,11 @@ public class Room {
     }
 
     public boolean checkFull() {
-        for (Player player : players) {
-            if (player.isLeaveRoom()) {
-                return false;
-            }
-        }
+//        for (Player player : players) {
+//            if (player.isLeaveRoom()) {
+//                return false;
+//            }
+//        }
 
         return players.size() == MAX_PLAYER;
     }
