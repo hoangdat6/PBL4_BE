@@ -29,7 +29,7 @@ import java.util.logging.Logger;
 @RestController
 @RequestMapping("/api/room")
 public class RoomController {
-    private final org.pbl4.pbl4_be.services.GameRoomManager gameRoomManager;
+    private final GameRoomManager gameRoomManager;
     private final SimpMessagingTemplate messagingTemplate;
     private Logger logger = Logger.getLogger(RoomController.class.getName());
     private final UserService userService;
@@ -94,6 +94,8 @@ public class RoomController {
                     .startPlayerId(lastGame.getFirstPlayerId())
                     .nthMove(lastGame.getNthMove())
                     .lastMove(lastGame.getLastMove())
+                    .player1Id(lastGame.getFirstPlayerId())
+                    .player2Id(lastGame.getSecondPlayerId())
                     .build();
             gameState.setBoardState(lastGame.getBoard());
             messagingTemplate.convertAndSend("/topic/game-state/" + roomCode, gameState);
@@ -110,8 +112,8 @@ public class RoomController {
         // Set participant type
         if (!room.checkPlayerExist(userId)) {
             response.setParticipantType(ParticipantType.SPECTATOR);
+            room.addSpectator(Player.builder().playerId(userId).build());
         }
-
 
         // Return a response with the room details
         return ResponseEntity.status(HttpStatus.OK).body(response);
@@ -164,14 +166,20 @@ public class RoomController {
     @PostMapping("/leave")
     public ResponseEntity<?> leaveRoom(@AuthenticationPrincipal UserDetailsImpl currentUser) {
         Long userId = currentUser.getId();
-        String roomCode = gameRoomManager.getRoomCodeByPlayerId(userId);
 
-        if (roomCode == null) {
+        String playerRoomCode = gameRoomManager.getRoomCodeByPlayerId(userId);
+        String spectatorRoomCode = gameRoomManager.getRoomCodeBySpectatorId(userId);
+
+        String roomCode = playerRoomCode != null ? playerRoomCode : spectatorRoomCode;
+
+        if (playerRoomCode == null && spectatorRoomCode == null) {
             logger.warning("Player with ID: " + userId + " is not in any room");
             throw new BadRequestException("Player is not in any room");
         }
 
         Room room = gameRoomManager.getRoom(roomCode);
+
+
         if (room == null) {
             throw new BadRequestException("Room not found");
         }
@@ -198,8 +206,6 @@ public class RoomController {
             if (gamePlaying != null && gamePlaying.getGameStatus() == GameStatus.STARTED) {
                 gamePlaying.setWinnerId(gamePlaying.getFirstPlayerId().equals(userId) ? gamePlaying.getSecondPlayerId() : gamePlaying.getFirstPlayerId());
                 gamePlaying.setGameStatus(GameStatus.ENDED);
-                // save game result here
-
                 // send game end message
                 messagingService.sendGameEndMessage(roomCode, gamePlaying.getWinnerId());
             }

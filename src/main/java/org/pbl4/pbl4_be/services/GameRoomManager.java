@@ -2,6 +2,7 @@ package org.pbl4.pbl4_be.services;
 
 import org.pbl4.pbl4_be.controllers.dto.ConfigGameDTO;
 import org.pbl4.pbl4_be.enums.FirstMoveOption;
+import org.pbl4.pbl4_be.enums.ParticipantType;
 import org.pbl4.pbl4_be.models.Room;
 import org.springframework.stereotype.Component;
 
@@ -45,6 +46,17 @@ public class GameRoomManager {
         for (Room room : rooms.values()) {
             if ( !room.isEnd()
                     && room.checkPlayerExist(playerId)) {
+                return room.getRoomCode();
+            }
+        }
+
+        return null;
+    }
+
+    public String getRoomCodeBySpectatorId(Long spectatorId) {
+        for (Room room : rooms.values()) {
+            if ( !room.isEnd()
+                    && room.checkSpectatorExist(spectatorId)) {
                 return room.getRoomCode();
             }
         }
