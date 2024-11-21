@@ -1,8 +1,6 @@
 package org.pbl4.pbl4_be.services;
 
-import org.pbl4.pbl4_be.controllers.dto.ConfigGameDTO;
-import org.pbl4.pbl4_be.enums.FirstMoveOption;
-import org.pbl4.pbl4_be.enums.ParticipantType;
+import org.pbl4.pbl4_be.models.GameConfig;
 import org.pbl4.pbl4_be.models.Room;
 import org.springframework.stereotype.Component;
 
@@ -27,8 +25,8 @@ public class GameRoomManager {
      * Khi tạo room, tạo luôn game đầu tiên cho room đó
      */
 
-    public Room createRoom(String roomId, ConfigGameDTO configGameDTO) {
-        Room room = new Room(roomId, configGameDTO);
+    public Room createRoom(String roomId, GameConfig gameConfig) {
+        Room room = new Room(roomId, gameConfig);
         rooms.put(roomId, room);
         room.addGame();
         return room;

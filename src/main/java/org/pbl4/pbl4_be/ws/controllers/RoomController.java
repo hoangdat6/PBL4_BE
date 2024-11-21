@@ -1,15 +1,11 @@
 package org.pbl4.pbl4_be.ws.controllers;
 
-import org.pbl4.pbl4_be.controllers.dto.ConfigGameDTO;
-import org.pbl4.pbl4_be.controllers.dto.JoinRoomResponse;
-import org.pbl4.pbl4_be.controllers.dto.GameState;
-import org.pbl4.pbl4_be.controllers.dto.RoomResponse;
+import org.pbl4.pbl4_be.controllers.dto.*;
 import org.pbl4.pbl4_be.controllers.exception.BadRequestException;
 import org.pbl4.pbl4_be.controllers.exception.PlayerAlreadyInRoomException;
 import org.pbl4.pbl4_be.enums.GameStatus;
 import org.pbl4.pbl4_be.enums.ParticipantType;
 import org.pbl4.pbl4_be.models.*;
-import org.pbl4.pbl4_be.repositories.RoomDBRepository;
 import org.pbl4.pbl4_be.services.GameRoomManager;
 import org.pbl4.pbl4_be.services.RoomDBService;
 import org.pbl4.pbl4_be.services.UserService;
@@ -58,7 +54,7 @@ public class RoomController {
 
         // Kiểm tra player đã tham gia phòng khác chưa
         if (roomCodeOfPlayer != null && !Objects.equals(roomCode, roomCodeOfPlayer)) {
-            throw new PlayerAlreadyInRoomException(HttpStatus.CONFLICT ,"Player is playing in another room", roomCodeOfPlayer);
+            throw new PlayerAlreadyInRoomException(HttpStatus.CONFLICT, "Player is playing in another room", roomCodeOfPlayer);
         }
 
         // Room này đảm bảo đã tồn tại
@@ -69,9 +65,12 @@ public class RoomController {
             User user = userService.findById(userId).orElseThrow(() -> new BadRequestException("User not found"));
 
             room.addPlayer(Player.builder()
-                    .playerId(user.getId())
-                    .playerName(user.getName())
-                    .email(user.getEmail())
+                    .id(user.getId())
+                    .name(user.getName())
+                    .avatar(user.getAvatar())
+                    .score((byte) 0)
+                    .isReady(true)
+                    .rank(1)
                     .build()
             );
         }
@@ -79,23 +78,42 @@ public class RoomController {
         Game lastGame = room.getLastGame();
         if (room.checkFull()) {
             /*
-                * Nếu phòng đã full và game chưa bắt đầu thì bắt đầu game
-                * Nếu game đang chờ chơi thì bắt đầu game
-                * Nếu không thì gửi lại trạng thái của game trước đó
+             * Nếu phòng đã full và game chưa bắt đầu thì bắt đầu game
+             * Nếu game đang chờ chơi thì bắt đầu game
+             * Nếu không thì gửi lại trạng thái của game trước đó
              */
-            if(lastGame.getGameStatus() == GameStatus.NOT_STARTED || lastGame.getGameStatus() == GameStatus.PENDING) {
+            if (lastGame.getGameStatus() == GameStatus.NOT_STARTED || lastGame.getGameStatus() == GameStatus.PENDING) {
                 room.startGame();
                 RoomDB roomDB = new RoomDB(room);
                 roomDB = roomDBService.save(roomDB);
                 room.setRoomId(roomDB.getId());
             }
+
+            // Gửi lại trạng thái game trước đó
+
+            // get thông tin người chơi
+
+            Player player1 = room.getPlayers().get(0);
+            Player player2 = room.getPlayers().get(1);
+
             GameState gameState = GameState.builder()
                     .roomCode(roomCode)
-                    .startPlayerId(lastGame.getFirstPlayerId())
+                    .startPlayerId(lastGame.getFirstPlayerInfo().getPlayerId())
                     .nthMove(lastGame.getNthMove())
                     .lastMove(lastGame.getLastMove())
-                    .player1Id(lastGame.getFirstPlayerId())
-                    .player2Id(lastGame.getSecondPlayerId())
+                    .gameConfig(room.getGameConfig())
+                    .player1Info(
+                            new PlayerForGameState(
+                                    player1,
+                                    lastGame.getFirstPlayerInfo()
+                            )
+                    )
+                    .player2Info(
+                            new PlayerForGameState(
+                                    player2,
+                                    lastGame.getSecondPlayerInfo()
+                            )
+                    )
                     .build();
             gameState.setBoardState(lastGame.getBoard());
             messagingTemplate.convertAndSend("/topic/game-state/" + roomCode, gameState);
@@ -112,7 +130,7 @@ public class RoomController {
         // Set participant type
         if (!room.checkPlayerExist(userId)) {
             response.setParticipantType(ParticipantType.SPECTATOR);
-            room.addSpectator(Player.builder().playerId(userId).build());
+            room.addSpectator(Player.builder().id(userId).build());
         }
 
         // Return a response with the room details
@@ -122,7 +140,7 @@ public class RoomController {
 
     @PostMapping("/create")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<?> createRoom(@RequestBody ConfigGameDTO configGameDTO, @AuthenticationPrincipal UserDetailsImpl currentUser) {
+    public ResponseEntity<?> createRoom(@RequestBody GameConfig gameConfig, @AuthenticationPrincipal UserDetailsImpl currentUser) {
         Long userId = currentUser.getId();
 
         // Kiểm tra player đã tham gia phòng khác chưa
@@ -131,7 +149,7 @@ public class RoomController {
         String roomCodeOfPlayer = gameRoomManager.getRoomCodeByPlayerId(userId);
 
         if (roomCodeOfPlayer != null) {
-            throw new PlayerAlreadyInRoomException(HttpStatus.CONFLICT ,"Player is playing in another room", roomCodeOfPlayer);
+            throw new PlayerAlreadyInRoomException(HttpStatus.CONFLICT, "Player is playing in another room", roomCodeOfPlayer);
         }
 
         String codeRandom = randomRoomCode();
@@ -143,7 +161,7 @@ public class RoomController {
          * Mặc định tạo game lúc tạo phòng với người chơi đầu tiên là người tạo phòng
          * Game này sẽ được bắt đầu khi phòng đã đủ người chơi
          */
-        Room room = gameRoomManager.createRoom(codeRandom, configGameDTO);
+        Room room = gameRoomManager.createRoom(codeRandom, gameConfig);
 
         logger.info("Room created with code: " + room.getRoomCode());
         // Add the owner to the room
@@ -187,10 +205,10 @@ public class RoomController {
         logger.info("Số lượng phòng trong hệ thống: " + gameRoomManager.getRoomsSize());
 
         /*
-            * Có 3 trường hợp xảy ra:
-            * 1. Người chơi vừa tạo phòng và không có người chơi nào khác thì xóa phòng
-            * 2. Người chơi đang chơi game và rời phòng -> lưu lại kết quả, kết thúc game, thông báo người thắng
-            * 3. Ván đấu kết thúc và người chơi rời phòng
+         * Có 3 trường hợp xảy ra:
+         * 1. Người chơi vừa tạo phòng và không có người chơi nào khác thì xóa phòng
+         * 2. Người chơi đang chơi game và rời phòng -> lưu lại kết quả, kết thúc game, thông báo người thắng
+         * 3. Ván đấu kết thúc và người chơi rời phòng
          */
         // 1
         if (room.getPlayers().size() == 1) {
