@@ -54,8 +54,10 @@ public class GameWebSocketController {
         if (move.isWin()) {
             if (move.getNthMove() % 2 == 0) {
                 game.setWinnerId(game.getFirstPlayerId());
+                room.increaseScore(game.getFirstPlayerId());
             } else {
                 game.setWinnerId(game.getSecondPlayerId());
+                room.increaseScore(game.getSecondPlayerId());
             }
 
             setGameEnd(room, game);

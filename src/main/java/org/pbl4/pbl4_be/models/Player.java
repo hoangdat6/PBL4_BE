@@ -2,22 +2,21 @@ package org.pbl4.pbl4_be.models;
 
 import lombok.*;
 
-import java.security.Principal;
-
 @Setter
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class Player {
-    private Long playerId;
-    private String email;
-    private String playerName;
+    private Long id;
+    private String name;
+    private String avatar;
+    private byte score;
+    private int rank;
     private boolean isLeaveRoom;
+    private boolean isReady;
 
-    public Player(Long playerId) {
-        this.playerId = playerId;
-
+    public void increaseScore() {
+        score++;
     }
-
 }

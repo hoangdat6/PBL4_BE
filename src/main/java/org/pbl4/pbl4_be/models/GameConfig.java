@@ -1,4 +1,4 @@
-package org.pbl4.pbl4_be.controllers.dto;
+package org.pbl4.pbl4_be.models;
 
 import lombok.*;
 import org.pbl4.pbl4_be.enums.FirstMoveOption;
@@ -8,8 +8,10 @@ import org.pbl4.pbl4_be.enums.FirstMoveOption;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ConfigGameDTO {
-    private int timeLimitForMove;
-    private int timeLimitForMatch;
+@ToString
+public class GameConfig {
+    private Integer totalTime;
+    private Integer moveDuration;
     private FirstMoveOption firstMoveOption;
+
 }

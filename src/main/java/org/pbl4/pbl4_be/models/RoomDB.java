@@ -2,7 +2,6 @@ package org.pbl4.pbl4_be.models;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import org.pbl4.pbl4_be.services.UserService;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -49,13 +48,13 @@ public class RoomDB {
     public RoomDB(Room room){
         this.code = room.getRoomCode();
         this.password = room.getPassword();
-        this.player1Id = room.getPlayers().get(0).getPlayerId();
-        this.player2Id = room.getPlayers().get(1).getPlayerId();
-        this.gameDuration = room.getConfigGameDTO().getTimeLimitForMatch();
-        this.moveDuration = room.getConfigGameDTO().getTimeLimitForMove();
+        this.player1Id = room.getPlayers().get(0).getId();
+        this.player2Id = room.getPlayers().get(1).getId();
+        this.gameDuration = room.getGameConfig().getMoveDuration();
+        this.moveDuration = room.getGameConfig().getTotalTime();
         this.isPrivate = room.isPrivate();
         this.status = room.getRoomStatusTypes().toString();
-        this.createdBy = room.getPlayers().get(0).getPlayerId();
+        this.createdBy = room.getPlayers().get(0).getId();
         this.createdAt = LocalDateTime.now();
     }
 
@@ -68,4 +67,5 @@ public class RoomDB {
     public RoomDB() {
 
     }
+
 }
