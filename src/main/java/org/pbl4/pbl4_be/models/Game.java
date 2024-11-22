@@ -3,10 +3,14 @@ import lombok.Getter;
 import lombok.Setter;
 import org.pbl4.pbl4_be.enums.GameStatus;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 @Getter
 @Setter
@@ -23,8 +27,9 @@ public class  Game {
     private LocalDateTime createdAt;
     private List<GameMove> moveList;
     private GameStatus gameStatus;
-    private LocalDateTime time;
+    private LocalDateTime startTimeMove;
     private boolean isPlayAgain;
+    private Integer moveDuration;
 
     public Game(String roomId, Integer gameId, GameConfig gameConfig) {
         this.roomId = roomId;
@@ -38,18 +43,21 @@ public class  Game {
         this.gameStatus = GameStatus.NOT_STARTED;
         this.createdAt = LocalDateTime.now();
         this.isPlayAgain = false;
+        this.moveDuration = gameConfig.getMoveDuration();
         this.firstPlayerInfo = new PlayerTimeInfo(
                 null,
                 gameConfig.getTotalTime(),
                 gameConfig.getMoveDuration(),
-                0
+                0,
+                LocalDateTime.now()
         );
 
         this.secondPlayerInfo = new PlayerTimeInfo(
                 null,
                 gameConfig.getTotalTime(),
                 gameConfig.getMoveDuration(),
-                0
+                0,
+                LocalDateTime.now()
         );
     }
 
@@ -60,12 +68,17 @@ public class  Game {
     public boolean  processMove(GameMove move) {
         // Xử lý nước đi của người chơi
         board.setMove(move.getRow(), move.getCol(), (byte) (move.getNthMove() % 2));
-        setTime();
+        setStartTimeMove();
+        if(move.getNthMove() % 2 == 0){
+            firstPlayerInfo.setTimeInfo(moveDuration, startTimeMove);
+        }else {
+            secondPlayerInfo.setTimeInfo(moveDuration, startTimeMove);
+        }
         return board.checkWin(move.getRow(), move.getCol(), (byte) (move.getNthMove() % 2));
     }
 
-    public void setTime(){
-        this.time = LocalDateTime.now();
+    public void setStartTimeMove(){
+        this.startTimeMove = LocalDateTime.now();
     }
 
     public boolean isEnd() {
@@ -78,7 +91,7 @@ public class  Game {
     }
 
     public void startGame() {
-        this.time = LocalDateTime.now();
+        this.startTimeMove = LocalDateTime.now();
         this.gameStatus = GameStatus.STARTED;
     }
 
@@ -89,11 +102,18 @@ public class  Game {
         return moveList.get(moveList.size() - 1);
     }
 
-    public Long getFirstPlayerId() {
-        return firstPlayerInfo.getPlayerId();
-    }
+    public Long getFirstPlayerId() {return firstPlayerInfo.getPlayerId();}
 
     public Long getSecondPlayerId() {
         return secondPlayerInfo.getPlayerId();
+    }
+    public PlayerTimeInfo getFirstPlayerInfo() {
+        firstPlayerInfo.setTimeInfo(moveDuration, startTimeMove);
+        return firstPlayerInfo;
+    }
+
+    public PlayerTimeInfo getSecondPlayerInfo() {
+        secondPlayerInfo.setTimeInfo(moveDuration, startTimeMove);
+        return secondPlayerInfo;
     }
 }
