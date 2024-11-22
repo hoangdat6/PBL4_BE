@@ -6,7 +6,6 @@ import org.pbl4.pbl4_be.models.GameMove;
 import org.pbl4.pbl4_be.models.Game;
 import org.pbl4.pbl4_be.models.Room;
 import org.pbl4.pbl4_be.models.RoomDB;
-import org.pbl4.pbl4_be.repositories.RoomDBRepository;
 import org.pbl4.pbl4_be.services.GameRoomManager;
 import org.pbl4.pbl4_be.services.RoomDBService;
 import org.pbl4.pbl4_be.ws.services.MessagingService;
@@ -21,7 +20,6 @@ import org.springframework.stereotype.Controller;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 
 @Controller
 public class GameWebSocketController {
@@ -45,7 +43,7 @@ public class GameWebSocketController {
         Room room = gameRoomManager.getRoom(roomCode);
 
         Game game = room.getGamePlaying();
-        move.setDuration((int) Duration.between(game.getTime(), LocalDateTime.now()).getSeconds());
+        move.setDuration((int) Duration.between(game.getStartTimeMove(), LocalDateTime.now()).getSeconds());
         game.getMoveList().add(move);
         if (game.processMove(move))
             move.setWin(true);
