@@ -99,4 +99,16 @@ public class GameWebSocketController {
                     build());
         }
     }
+
+    @MessageMapping("/winner/{roomCode}")
+    @SendTo("/topic/winner/{roomCode}")
+    public ResponseEntity<?> getWinner(@DestinationVariable String roomCode, @Payload Long winnerId) {
+        Room room = gameRoomManager.getRoom(roomCode);
+        Game game = room.getLastGame();
+
+        game.setWinnerId(winnerId);
+        game.setGameStatus(GameStatus.ENDED);
+
+        return ResponseEntity.ok(winnerId);
+    }
 }
