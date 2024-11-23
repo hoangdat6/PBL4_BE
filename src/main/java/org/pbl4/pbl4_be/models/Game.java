@@ -3,6 +3,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.pbl4.pbl4_be.enums.GameStatus;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -91,11 +92,8 @@ public class  Game {
 
     public void startGame() {
         this.startTimeMove = LocalDateTime.now();
-        firstPlayerInfo.setLastUpdateTime(LocalDateTime.now());
-        secondPlayerInfo.setLastUpdateTime(LocalDateTime.now());
-        firstPlayerInfo.setTimeInfo(moveDuration, startTimeMove);
-        secondPlayerInfo.setTimeInfo(moveDuration, startTimeMove);
-
+        this.firstPlayerInfo.setInitialTimeInfo(moveDuration);
+        this.secondPlayerInfo.setInitialTimeInfo(moveDuration);
         this.gameStatus = GameStatus.STARTED;
     }
 
@@ -111,7 +109,6 @@ public class  Game {
     public Long getSecondPlayerId() {
         return secondPlayerInfo.getPlayerId();
     }
-
     public PlayerTimeInfo getFirstPlayerInfo() {
         firstPlayerInfo.setTimeInfo(moveDuration, startTimeMove);
         return firstPlayerInfo;
@@ -120,13 +117,5 @@ public class  Game {
     public PlayerTimeInfo getSecondPlayerInfo() {
         secondPlayerInfo.setTimeInfo(moveDuration, startTimeMove);
         return secondPlayerInfo;
-    }
-
-    public void resetRemainMoveTime(Long firstPlayerInfo) {
-        if (firstPlayerInfo.equals(this.firstPlayerInfo.getPlayerId())) {
-            this.getFirstPlayerInfo().setRemainMoveDuration(moveDuration);
-        } else {
-            this.getSecondPlayerInfo().setRemainMoveDuration(moveDuration);
-        }
     }
 }
