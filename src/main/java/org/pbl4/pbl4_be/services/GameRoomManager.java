@@ -13,7 +13,6 @@ public class GameRoomManager {
 
     private Map<String, Room> rooms = new ConcurrentHashMap<>();
 
-
     public static GameRoomManager getInstance() {
         if(instance == null) {
             instance = new GameRoomManager();

@@ -104,19 +104,16 @@ public class RoomController {
                     .nthMove(lastGame.getNthMove())
                     .lastMove(lastGame.getLastMove())
                     .gameConfig(room.getGameConfig())
-                    .player1Info(
-                        new PlayerForGameState(
-                                player1,
-                                lastGame.getFirstPlayerInfo()
-                        )
-                    )
-                    .player2Info(
-                        new PlayerForGameState(
-                                player2,
-                                lastGame.getSecondPlayerInfo()
-                        )
-                    )
                     .build();
+
+            if(Objects.equals(player1.getId(), lastGame.getFirstPlayerId())) {
+                gameState.setPlayer1Info(new PlayerForGameState(player1, lastGame.getFirstPlayerInfo()));
+                gameState.setPlayer2Info(new PlayerForGameState(player2, lastGame.getSecondPlayerInfo()));
+            } else {
+                gameState.setPlayer1Info(new PlayerForGameState(player2, lastGame.getSecondPlayerInfo()));
+                gameState.setPlayer2Info(new PlayerForGameState(player1, lastGame.getFirstPlayerInfo()));
+            }
+
             gameState.setBoardState(lastGame.getBoard());
             messagingTemplate.convertAndSend("/topic/game-state/" + roomCode, gameState);
         }
@@ -138,6 +135,7 @@ public class RoomController {
         // Return a response with the room details
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
+
 
 
     @PostMapping("/create")
