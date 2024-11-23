@@ -1,10 +1,7 @@
 package org.pbl4.pbl4_be.models;
 
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -15,6 +12,7 @@ import static java.lang.Math.max;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@ToString
 public class PlayerTimeInfo {
     private Long playerId;
     private Integer remainTime; // in seconds
