@@ -14,6 +14,7 @@ public class GameMove {
     private short nthMove;
     private boolean isWin;
     private Integer duration;
+    private Long playerTurnId;
 
     public GameMove() {
         // No-argument constructor

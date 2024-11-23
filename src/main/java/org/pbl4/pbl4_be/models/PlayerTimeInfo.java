@@ -35,7 +35,4 @@ public class PlayerTimeInfo {
         this.playedTime += Time2;
         this.lastUpdateTime = LocalDateTime.now();
     }
-
-
-
 }

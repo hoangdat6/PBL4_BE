@@ -178,4 +178,27 @@ public class Room {
         return roomStatusTypes == GameStatus.STARTED;
     }
 
+    public void setPlayerIsReady(boolean b) {
+        players.forEach(player -> player.setReady(b));
+    }
+
+    public Player getPlayerById(Long playerId) {
+        for (Player player : players) {
+            if (player.getId().equals(playerId)) {
+                return player;
+            }
+        }
+
+        return null;
+    }
+
+    public boolean isAllPlayerIsReady() {
+        for (Player player : players) {
+            if (!player.isReady()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
 }
