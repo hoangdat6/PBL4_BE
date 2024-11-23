@@ -76,18 +76,20 @@ public class RoomController {
         }
 
         Game lastGame = room.getLastGame();
-        if (room.checkFull()) {
+        if (room.checkFull() && room.isAllPlayerIsReady()) {
             /*
              * Nếu phòng đã full và game chưa bắt đầu thì bắt đầu game
              * Nếu game đang chờ chơi thì bắt đầu game
              * Nếu không thì gửi lại trạng thái của game trước đó
              */
-            if (lastGame.getGameStatus() == GameStatus.NOT_STARTED || lastGame.getGameStatus() == GameStatus.PENDING) {
+            if (lastGame.getGameStatus() != GameStatus.STARTED) {
+                System.out.println("Bắt đầu game");
                 room.startGame();
                 RoomDB roomDB = new RoomDB(room);
                 roomDB = roomDBService.save(roomDB);
                 room.setRoomId(roomDB.getId());
             }
+
 
             // Gửi lại trạng thái game trước đó
 
@@ -103,16 +105,16 @@ public class RoomController {
                     .lastMove(lastGame.getLastMove())
                     .gameConfig(room.getGameConfig())
                     .player1Info(
-                            new PlayerForGameState(
-                                    player1,
-                                    lastGame.getFirstPlayerInfo()
-                            )
+                        new PlayerForGameState(
+                                player1,
+                                lastGame.getFirstPlayerInfo()
+                        )
                     )
                     .player2Info(
-                            new PlayerForGameState(
-                                    player2,
-                                    lastGame.getSecondPlayerInfo()
-                            )
+                        new PlayerForGameState(
+                                player2,
+                                lastGame.getSecondPlayerInfo()
+                        )
                     )
                     .build();
             gameState.setBoardState(lastGame.getBoard());

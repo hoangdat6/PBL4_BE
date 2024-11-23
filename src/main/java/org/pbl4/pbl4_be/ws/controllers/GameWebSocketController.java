@@ -2,10 +2,7 @@ package org.pbl4.pbl4_be.ws.controllers;
 
 import org.pbl4.pbl4_be.enums.GameStatus;
 import org.pbl4.pbl4_be.enums.PlayAgainCode;
-import org.pbl4.pbl4_be.models.GameMove;
-import org.pbl4.pbl4_be.models.Game;
-import org.pbl4.pbl4_be.models.Room;
-import org.pbl4.pbl4_be.models.RoomDB;
+import org.pbl4.pbl4_be.models.*;
 import org.pbl4.pbl4_be.services.GameRoomManager;
 import org.pbl4.pbl4_be.services.RoomDBService;
 import org.pbl4.pbl4_be.ws.services.MessagingService;
@@ -45,6 +42,8 @@ public class GameWebSocketController {
         Game game = room.getGamePlaying();
         move.setDuration((int) Duration.between(game.getStartTimeMove(), LocalDateTime.now()).getSeconds());
         game.getMoveList().add(move);
+        game.resetRemainMoveTime(move.getPlayerTurnId());
+
         if (game.processMove(move))
             move.setWin(true);
 
@@ -57,7 +56,7 @@ public class GameWebSocketController {
                 game.setWinnerId(game.getSecondPlayerId());
                 room.increaseScore(game.getSecondPlayerId());
             }
-
+            room.setPlayerIsReady(false);
             setGameEnd(room, game);
             messagingService.sendGameEndMessage(roomCode, game.getWinnerId());
             if(roomDBService.FindById(room.getRoomId()) != null) {
@@ -85,13 +84,17 @@ public class GameWebSocketController {
     public ResponseEntity<?> playAgain(@DestinationVariable String roomCode, @Payload PlayAgainRequest request) {
         Room room = gameRoomManager.getRoom(roomCode);
         Game game = room.getLastGame();
+        Player player = room.getPlayerById(request.getPlayerId());
 
         if (game.getGameStatus() == GameStatus.ENDED) {
             room.addGame();
-            room.getLastGame().setGameStatus(GameStatus.PENDING);
+            if(player != null) {
+                player.setReady(true);
+            }
             return ResponseEntity.ok(PlayAgainResponse.builder().playerId(request.getPlayerId()).roomCode(roomCode).code(PlayAgainCode.PLAY_AGAIN).
                     build());
         } else {
+            room.setPlayerIsReady(true);
             return ResponseEntity.ok(PlayAgainResponse.builder().playerId(request.getPlayerId()).roomCode(roomCode).code(PlayAgainCode.PLAY_AGAIN_ACCEPT).
                     build());
         }
