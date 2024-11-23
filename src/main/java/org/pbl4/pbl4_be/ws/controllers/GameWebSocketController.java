@@ -42,7 +42,7 @@ public class GameWebSocketController {
         Game game = room.getGamePlaying();
         move.setDuration((int) Duration.between(game.getStartTimeMove(), LocalDateTime.now()).getSeconds());
         game.getMoveList().add(move);
-        game.resetRemainMoveTime(move.getPlayerTurnId());
+//        game.resetRemainMoveTime(move.getPlayerTurnId());
 
         if (game.processMove(move))
             move.setWin(true);
