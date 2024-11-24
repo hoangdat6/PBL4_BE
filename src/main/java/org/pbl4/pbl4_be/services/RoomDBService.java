@@ -1,8 +1,8 @@
 package org.pbl4.pbl4_be.services;
-import org.pbl4.pbl4_be.models.GameDTO;
-import org.pbl4.pbl4_be.models.GameMoveDTO;
+import org.pbl4.pbl4_be.controllers.dto.GameDTO;
+import org.pbl4.pbl4_be.controllers.dto.GameMoveDTO;
 import org.pbl4.pbl4_be.models.RoomDB;
-import org.pbl4.pbl4_be.models.RoomDTO;
+import org.pbl4.pbl4_be.controllers.dto.RoomDTO;
 import org.pbl4.pbl4_be.repositories.RoomDBRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
