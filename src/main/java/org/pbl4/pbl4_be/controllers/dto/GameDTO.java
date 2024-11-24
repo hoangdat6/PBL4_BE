@@ -1,4 +1,4 @@
-package org.pbl4.pbl4_be.models;
+package org.pbl4.pbl4_be.controllers.dto;
 
 import lombok.Getter;
 import lombok.Setter;

@@ -1,7 +1,8 @@
-package org.pbl4.pbl4_be.models;
+package org.pbl4.pbl4_be.controllers.dto;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.pbl4.pbl4_be.models.User;
 
 import java.time.LocalDateTime;
 
