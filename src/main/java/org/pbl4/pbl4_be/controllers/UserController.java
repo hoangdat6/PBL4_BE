@@ -6,7 +6,9 @@ import org.pbl4.pbl4_be.controllers.dto.RoomDTO;
 import org.pbl4.pbl4_be.controllers.dto.UserDTO;
 import org.pbl4.pbl4_be.controllers.exception.BadRequestException;
 import org.pbl4.pbl4_be.models.*;
+import org.pbl4.pbl4_be.services.PlayerSeasonService;
 import org.pbl4.pbl4_be.services.RoomDBService;
+import org.pbl4.pbl4_be.services.SeasonService;
 import org.pbl4.pbl4_be.services.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -22,10 +24,14 @@ import java.util.List;
 public class UserController {
     final RoomDBService roomDBService;
     final UserService userService;
+    final SeasonService seasonService;
+    final PlayerSeasonService playerSeasonService;
 
-    public UserController(RoomDBService roomDBService, UserService userService) {
+    public UserController(RoomDBService roomDBService, UserService userService, SeasonService seasonService, PlayerSeasonService playerSeasonService) {
         this.roomDBService = roomDBService;
         this.userService = userService;
+        this.seasonService = seasonService;
+        this.playerSeasonService = playerSeasonService;
     }
 
     @GetMapping("/history")
@@ -47,17 +53,15 @@ public class UserController {
 
     @GetMapping("/profile")
     public ResponseEntity<?> getProfile(@AuthenticationPrincipal UserDetailsImpl currentUser) {
-        Long userId = currentUser.getId();
-        User user = userService.findById(userId).orElseThrow(() -> new BadRequestException("User not found"));
-        return ResponseEntity.ok(user);
+        return ResponseEntity.ok(userService.findProfileById(currentUser.getId()).orElse(null));
     }
 
     @GetMapping("/info")
     public ResponseEntity<?> getInfo(@AuthenticationPrincipal UserDetailsImpl currentUser) {
-        Long userId = currentUser.getId();
-        User user = userService.findById(userId).orElseThrow(() -> new BadRequestException("User not found"));
-        UserDTO userDTO = new UserDTO(user);
-        return ResponseEntity.ok(user);
+        Long id = currentUser.getId();
+        Long seasonId = seasonService.findCurrentSeason().orElseThrow(() -> new BadRequestException("Season not found")).getId();
+        Integer score = playerSeasonService.findBySeasonIdAndPlayerId(seasonId, id).isPresent() ? playerSeasonService.findBySeasonIdAndPlayerId(seasonId, id).get().getScore() : null; // null if not in season
+        return ResponseEntity.ok(userService.findUserWithScoreBySeasonId(id, score).orElse(null));
     }
 
 
