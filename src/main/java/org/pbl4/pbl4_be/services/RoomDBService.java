@@ -4,6 +4,7 @@ import org.pbl4.pbl4_be.controllers.dto.GameMoveDTO;
 import org.pbl4.pbl4_be.models.RoomDB;
 import org.pbl4.pbl4_be.controllers.dto.RoomDTO;
 import org.pbl4.pbl4_be.repositories.RoomDBRepository;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,7 +25,7 @@ public class RoomDBService {
 
     public List<RoomDTO> getHistory(Long userId) {
         // Lấy tất cả các RoomDB nơi người dùng là player1 hoặc player2
-        List<RoomDB> rooms = roomDBRepository.findAllByPlayer1IdOrPlayer2Id(userId, userId);
+        List<RoomDB> rooms = roomDBRepository.findAllByPlayer1IdOrPlayer2Id(userId, userId, Sort.by(Sort.Direction.DESC, "createdAt"));
 
         // Chuyển danh sách RoomDB thành RoomDTO
         return rooms.stream().map(room -> {

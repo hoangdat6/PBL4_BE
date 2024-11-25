@@ -2,11 +2,15 @@ package org.pbl4.pbl4_be.models;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
+@Getter
+@Setter
 @Table(name = "season")
 public class Season {
     @Id
