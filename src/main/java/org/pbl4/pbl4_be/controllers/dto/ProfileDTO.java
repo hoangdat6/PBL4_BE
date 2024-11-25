@@ -4,16 +4,19 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.pbl4.pbl4_be.models.User;
-import org.pbl4.pbl4_be.models.UserDetailsImpl;
+
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserDTO {
+public class ProfileDTO {
     private Long id;
     private String name;
     private String avatar;
-    private Integer score;
+    private String email;
+    private Integer maxRating;
+    private Integer lastSeason;
+    private LocalDateTime lastLogin;
 }
