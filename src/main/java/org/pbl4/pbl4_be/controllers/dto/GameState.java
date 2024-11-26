@@ -14,6 +14,7 @@ import org.pbl4.pbl4_be.models.GameMove;
 public class GameState {
     private String roomCode;
     private Long startPlayerId;
+    private Long winnerId;
     private short nthMove;
     private GameMove lastMove;
     private BoardDTO boardState;

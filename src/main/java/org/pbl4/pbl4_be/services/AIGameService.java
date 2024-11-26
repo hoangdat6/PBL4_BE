@@ -2,6 +2,8 @@ package org.pbl4.pbl4_be.services;
 
 import org.pbl4.pbl4_be.models.GameMove;
 
+import java.util.Random;
+
 public class AIGameService {
     private final long[] points = {100, 10000, 1000000, 100000000};
     private final int n = 16;
@@ -386,10 +388,14 @@ public class AIGameService {
         return gameMove;
     }
 
+    private String randomRoomCode() {
+        Random random = new Random();
+        int code = 100000 + random.nextInt(900000);
+        return String.valueOf(code);
+    }
 
-
-
-
-
+    public String getRoomCode() {
+        return randomRoomCode();
+    }
 }
 
