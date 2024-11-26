@@ -78,13 +78,13 @@ public class RoomController {
         }
 
         Game lastGame = room.getLastGame();
-        if (room.checkFull() && room.isAllPlayerIsReady()) {
+        if (room.checkFull()) {
             /*
              * Nếu phòng đã full và game chưa bắt đầu thì bắt đầu game
              * Nếu game đang chờ chơi thì bắt đầu game
              * Nếu không thì gửi lại trạng thái của game trước đó
              */
-            if (lastGame.getGameStatus() != GameStatus.STARTED) {
+            if (lastGame.getGameStatus() != GameStatus.STARTED && room.isAllPlayerIsReady()) {
                 System.out.println("Bắt đầu game");
                 room.startGame();
                 if(room.getRoomId() == null) {
@@ -94,11 +94,7 @@ public class RoomController {
                 }
             }
 
-
-            // Gửi lại trạng thái game trước đó
-
             // get thông tin người chơi
-
             Player player1 = room.getPlayers().get(0);
             Player player2 = room.getPlayers().get(1);
 
@@ -108,6 +104,7 @@ public class RoomController {
                     .nthMove(lastGame.getNthMove())
                     .lastMove(lastGame.getLastMove())
                     .gameConfig(room.getGameConfig())
+                    .winnerId(lastGame.getWinnerId())
                     .build();
 
             if(Objects.equals(player1.getId(), lastGame.getFirstPlayerId())) {

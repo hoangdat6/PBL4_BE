@@ -64,8 +64,4 @@ public class UserController {
         Integer score = playerSeasonService.findBySeasonIdAndPlayerId(seasonId, id).isPresent() ? playerSeasonService.findBySeasonIdAndPlayerId(seasonId, id).get().getScore() : null; // null if not in season
         return ResponseEntity.ok(userService.findUserWithScoreBySeasonId(id, score).orElse(null));
     }
-
-
-
-
 }
