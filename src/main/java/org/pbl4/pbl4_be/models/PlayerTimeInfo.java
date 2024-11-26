@@ -18,7 +18,7 @@ import static java.lang.Math.max;
 public class PlayerTimeInfo {
     private Long playerId;
     private Integer remainTime; // in seconds
-    private Integer remainMoveDuration; // in seconds
+    private Integer remainMoveDuration; // in secondsSL
     private Integer playedTime; // in seconds
     private LocalDateTime lastUpdateTime;
 
@@ -41,7 +41,4 @@ public class PlayerTimeInfo {
         this.playedTime = 0;
         this.lastUpdateTime = LocalDateTime.now();
     }
-
-
-
 }
