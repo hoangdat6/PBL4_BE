@@ -57,10 +57,10 @@ public class GameWebSocketController {
         if (move.isWin()) {
             if (move.getNthMove() % 2 == 0) {
                 game.setWinnerId(game.getFirstPlayerId());
-//                room.increaseScore(game.getFirstPlayerId());
+                room.increaseScore(game.getFirstPlayerId());
             } else {
                 game.setWinnerId(game.getSecondPlayerId());
-//                room.increaseScore(game.getSecondPlayerId());
+                room.increaseScore(game.getSecondPlayerId());
             }
             Season season = seasonService.findCurrentSeason().orElse(null);
             if(season != null) {
@@ -73,8 +73,8 @@ public class GameWebSocketController {
                 }else if(playerSeason2.getWinStreak() != 0){
                     playerSeason2.bonusScoreTime(game.getSecondPlayerInfo().getRemainTime(), game.getFirstPlayerInfo().getRemainTime());
                 }
-                room.updateScore(playerSeason1);
-                room.updateScore(playerSeason2);
+                room.updateSeasonScore(playerSeason1);
+                room.updateSeasonScore(playerSeason2);
                 playerSeasonService.save(playerSeason1);
                 playerSeasonService.save(playerSeason2);
             }
@@ -90,6 +90,25 @@ public class GameWebSocketController {
 
         if (game.getBoard().isFull()) {
             setGameEnd(room, game);
+            room.increaseScore(game.getFirstPlayerId());
+            room.increaseScore(game.getSecondPlayerId());
+            room.setPlayerIsReady(false);
+            Season season = seasonService.findCurrentSeason().orElse(null);
+            if(season != null) {
+                PlayerSeason playerSeason1 = playerSeasonService.findBySeasonIdAndPlayerId(season.getId(), game.getFirstPlayerId()).orElse(new PlayerSeason(userService.findById(game.getFirstPlayerId()).orElse(null), season));
+                PlayerSeason playerSeason2 = playerSeasonService.findBySeasonIdAndPlayerId(season.getId(), game.getSecondPlayerId()).orElse(new PlayerSeason(userService.findById(game.getSecondPlayerId()).orElse(null), season));
+                playerSeason1.updateScore(false, true);
+                playerSeason2.updateScore(false, true);
+                room.updateSeasonScore(playerSeason1);
+                room.updateSeasonScore(playerSeason2);
+                playerSeasonService.save(playerSeason1);
+                playerSeasonService.save(playerSeason2);
+            }
+            if(roomDBService.FindById(room.getRoomId()) != null) {
+                RoomDB roomDB = roomDBService.FindById(room.getRoomId());
+                roomDB.addGame(game);
+                roomDBService.save(roomDB);
+            }
             messagingService.sendGameEndMessage(roomCode, null);
         }
 

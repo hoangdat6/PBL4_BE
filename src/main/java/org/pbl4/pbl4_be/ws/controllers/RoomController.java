@@ -6,9 +6,7 @@ import org.pbl4.pbl4_be.controllers.exception.PlayerAlreadyInRoomException;
 import org.pbl4.pbl4_be.enums.GameStatus;
 import org.pbl4.pbl4_be.enums.ParticipantType;
 import org.pbl4.pbl4_be.models.*;
-import org.pbl4.pbl4_be.services.GameRoomManager;
-import org.pbl4.pbl4_be.services.RoomDBService;
-import org.pbl4.pbl4_be.services.UserService;
+import org.pbl4.pbl4_be.services.*;
 import org.pbl4.pbl4_be.ws.services.MessagingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -18,8 +16,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 import java.util.Random;
 import java.util.logging.Logger;
@@ -32,15 +28,19 @@ public class RoomController {
     private Logger logger = Logger.getLogger(RoomController.class.getName());
     private final UserService userService;
     private final MessagingService messagingService;
+    private final SeasonService seasonService;
+    private final PlayerSeasonService playerSeasonService;
 
     private final RoomDBService roomDBService;
 
     @Autowired
-    public RoomController(GameRoomManager gameRoomManager, SimpMessagingTemplate messagingTemplate, MessagingService messagingService, UserService userService, RoomDBService roomDBService) {
+    public RoomController(GameRoomManager gameRoomManager, SimpMessagingTemplate messagingTemplate, MessagingService messagingService, UserService userService, SeasonService seasonService, PlayerSeasonService playerSeasonService, RoomDBService roomDBService) {
         this.gameRoomManager = gameRoomManager;
         this.messagingTemplate = messagingTemplate;
         this.userService = userService;
         this.messagingService = messagingService;
+        this.seasonService = seasonService;
+        this.playerSeasonService = playerSeasonService;
         this.roomDBService = roomDBService;
     }
 
@@ -70,7 +70,7 @@ public class RoomController {
                     .id(user.getId())
                     .name(user.getName())
                     .avatar(user.getAvatar())
-                    .score((byte) 0)
+                    .matchScore((byte) 0)
                     .isReady(true)
                     .rank(1)
                     .build()
@@ -229,6 +229,22 @@ public class RoomController {
                 gamePlaying.setWinnerId(gamePlaying.getFirstPlayerId().equals(userId) ? gamePlaying.getSecondPlayerId() : gamePlaying.getFirstPlayerId());
                 gamePlaying.setGameStatus(GameStatus.ENDED);
                 if(roomDBService.FindById(room.getRoomId()) != null) {
+                    Season season = seasonService.findCurrentSeason().orElse(null);
+                    if(season != null) {
+                        PlayerSeason playerSeason1 = playerSeasonService.findBySeasonIdAndPlayerId(season.getId(), gamePlaying.getFirstPlayerId()).orElse(new PlayerSeason(userService.findById(gamePlaying.getFirstPlayerId()).orElse(null), season));
+                        PlayerSeason playerSeason2 = playerSeasonService.findBySeasonIdAndPlayerId(season.getId(), gamePlaying.getSecondPlayerId()).orElse(new PlayerSeason(userService.findById(gamePlaying.getSecondPlayerId()).orElse(null), season));
+                        playerSeason1.updateScore(gamePlaying.getFirstPlayerId().equals(gamePlaying.getWinnerId()), false);
+                        playerSeason2.updateScore(gamePlaying.getSecondPlayerId().equals(gamePlaying.getWinnerId()), false);
+                        if(playerSeason1.getWinStreak() != 0){
+                            playerSeason1.bonusScoreTime(gamePlaying.getFirstPlayerInfo().getRemainTime(), gamePlaying.getSecondPlayerInfo().getRemainTime());
+                        }else if(playerSeason2.getWinStreak() != 0){
+                            playerSeason2.bonusScoreTime(gamePlaying.getSecondPlayerInfo().getRemainTime(), gamePlaying.getFirstPlayerInfo().getRemainTime());
+                        }
+                        room.updateSeasonScore(playerSeason1);
+                        room.updateSeasonScore(playerSeason2);
+                        playerSeasonService.save(playerSeason1);
+                        playerSeasonService.save(playerSeason2);
+                    }
                     RoomDB roomDB = roomDBService.FindById(room.getRoomId());
                     roomDB.addGame(gamePlaying);
                     roomDBService.save(roomDB);

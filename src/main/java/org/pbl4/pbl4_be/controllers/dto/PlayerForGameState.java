@@ -13,7 +13,8 @@ public class PlayerForGameState {
     private Long id;
     private String name;
     private String avatar;
-    private int score;
+    private int matchScore;
+    private int seasonScore;
     private int rank;
     private Integer remainTime;
     private Integer remainMoveDuration; // in seconds
@@ -23,7 +24,8 @@ public class PlayerForGameState {
         this.id = player.getId();
         this.name = player.getName();
         this.avatar = player.getAvatar();
-        this.score = player.getScore();
+        this.matchScore = player.getMatchScore();
+        this.seasonScore = player.getSeasonScore();
         this.rank = player.getRank();
         this.remainTime = timeInfo.getRemainTime();
         this.remainMoveDuration = timeInfo.getRemainMoveDuration();

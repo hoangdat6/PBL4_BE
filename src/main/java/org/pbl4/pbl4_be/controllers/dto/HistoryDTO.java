@@ -24,7 +24,10 @@ public class HistoryDTO {
     public void UpdateScore(Long winnerId) {
         if (player1.getId() == winnerId) {
             player1.setScore(player1.getScore() + 1);
+        } else if(player2.getId() == winnerId){
+            player2.setScore(player2.getScore() + 1);
         } else {
+            player1.setScore(player1.getScore() + 1);
             player2.setScore(player2.getScore() + 1);
         }
     }
