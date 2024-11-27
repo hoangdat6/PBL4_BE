@@ -65,13 +65,13 @@ public class Room {
 
     }
 
-//    public void increaseScore(Long playerId) {
-//        players.forEach(player -> {
-//            if(player.getId().equals(playerId)) {
-//                player.increaseScore();
-//            }
-//        });
-//    }
+    public void increaseScore(Long playerId) {
+        players.forEach(player -> {
+            if(player.getId().equals(playerId)) {
+                player.increaseMatchScore();
+            }
+        });
+    }
 
     private Game getGamePrevious() {
         return games.get(games.size() - 2);
@@ -202,10 +202,10 @@ public class Room {
         return true;
     }
 
-    public void updateScore(PlayerSeason playerSeason){
+    public void updateSeasonScore(PlayerSeason playerSeason){
         players.forEach(player -> {
             if(player.getId().equals(playerSeason.getPlayer().getId())) {
-                player.setScore(playerSeason.getScore());
+                player.setSeasonScore(playerSeason.getScore());
             }
         });
     }
