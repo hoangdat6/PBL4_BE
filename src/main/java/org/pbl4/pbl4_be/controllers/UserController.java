@@ -37,6 +37,7 @@ public class UserController {
     @GetMapping("/history")
     public ResponseEntity<?> getHistory(@AuthenticationPrincipal UserDetailsImpl currentUser) {
         Long userId = currentUser.getId();
+        System.out.println(currentUser.getName());
         List<RoomDTO> list = roomDBService.getHistory(userId);
         List<HistoryDTO> result = new ArrayList<>();
         for(RoomDTO roomDTO : list){
