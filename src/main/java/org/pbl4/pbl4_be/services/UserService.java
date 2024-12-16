@@ -53,6 +53,4 @@ public class UserService {
         return userRepository.findProfileById(userId);
     }
 
-
-
 }

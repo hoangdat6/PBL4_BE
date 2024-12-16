@@ -7,6 +7,9 @@ import lombok.Setter;
 import org.pbl4.pbl4_be.models.Board;
 import org.pbl4.pbl4_be.models.GameConfig;
 import org.pbl4.pbl4_be.models.GameMove;
+import org.pbl4.pbl4_be.models.Player;
+
+import java.util.List;
 
 @Getter
 @Setter
@@ -21,6 +24,7 @@ public class GameState {
     private GameConfig gameConfig;
     private PlayerForGameState player1Info;
     private PlayerForGameState player2Info;
+    private List<Player> spectators;
 
     public void setBoardState(Board board) {
         Gson gson = new Gson();

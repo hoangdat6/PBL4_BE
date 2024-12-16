@@ -68,7 +68,6 @@ public class WebSecurityConfig {
         configuration.addAllowedMethod("*"); // Cho phép tất cả các phương thức HTTP
         configuration.addAllowedHeader("*"); // Cho phép tất cả các header
         configuration.setAllowCredentials(true); // Cho phép thông tin xác thực (cookies)
-
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration); // Áp dụng cho tất cả các URL
 

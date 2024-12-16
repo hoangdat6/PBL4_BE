@@ -1,9 +1,6 @@
 package org.pbl4.pbl4_be.controllers;
 
-import org.pbl4.pbl4_be.controllers.dto.GameDTO;
-import org.pbl4.pbl4_be.controllers.dto.HistoryDTO;
-import org.pbl4.pbl4_be.controllers.dto.RoomDTO;
-import org.pbl4.pbl4_be.controllers.dto.UserDTO;
+import org.pbl4.pbl4_be.controllers.dto.*;
 import org.pbl4.pbl4_be.controllers.exception.BadRequestException;
 import org.pbl4.pbl4_be.models.*;
 import org.pbl4.pbl4_be.services.PlayerSeasonService;
@@ -63,5 +60,15 @@ public class UserController {
         Long seasonId = seasonService.findCurrentSeason().orElseThrow(() -> new BadRequestException("Season not found")).getId();
         Integer score = playerSeasonService.findBySeasonIdAndPlayerId(seasonId, id).isPresent() ? playerSeasonService.findBySeasonIdAndPlayerId(seasonId, id).get().getScore() : null; // null if not in season
         return ResponseEntity.ok(userService.findUserWithScoreBySeasonId(id, score).orElse(null));
+    }
+
+    @GetMapping("/account-info")
+    public ResponseEntity<?> getAccountInfo(@AuthenticationPrincipal UserDetailsImpl currentUser) {
+        User user = userService.findById(currentUser.getId()).orElseThrow(() -> new BadRequestException("User not found"));
+        return ResponseEntity.ok(AccountDTO.builder()
+                .id(user.getId())
+                .name(user.getName())
+                .email(user.getEmail())
+                .build());
     }
 }

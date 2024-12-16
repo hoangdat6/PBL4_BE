@@ -24,6 +24,7 @@ public class PlayerSeason {
     private Long id;
 
     @ManyToOne
+
     @JoinColumn(name = "player_id", nullable = false)
     private User player;
 
@@ -75,7 +76,7 @@ public class PlayerSeason {
             score += 10;
             winStreak++;
             winCount++;
-        } else if(isDraw){
+        } else if (isDraw) {
             score += 5;
             winStreak = 0;
             drawCount++;
@@ -93,7 +94,7 @@ public class PlayerSeason {
     }
 
     public void bonusScoreTime(Integer myTime, Integer opponentTime) {
-        int time = (myTime - opponentTime)/60;
+        int time = (myTime - opponentTime) / 60;
         score += min(5, max(0, time - 1));
     }
 

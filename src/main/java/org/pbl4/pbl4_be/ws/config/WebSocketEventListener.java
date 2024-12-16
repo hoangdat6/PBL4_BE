@@ -23,6 +23,7 @@ public class WebSocketEventListener {
     public void handleWebSocketConnectListener(SessionConnectEvent event) {
         StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
         logger.info("New connection: " + headerAccessor.getSessionId() );
+
     }
 
     // Lắng nghe sự kiện khi có người ngắt kết nối
@@ -31,4 +32,6 @@ public class WebSocketEventListener {
         StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
         logger.info("User disconnected: " + headerAccessor.getSessionId());
     }
+
+
 }
