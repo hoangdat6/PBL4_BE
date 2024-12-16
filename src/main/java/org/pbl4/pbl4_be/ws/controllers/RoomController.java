@@ -7,7 +7,7 @@ import org.pbl4.pbl4_be.enums.GameStatus;
 import org.pbl4.pbl4_be.enums.ParticipantType;
 import org.pbl4.pbl4_be.models.*;
 import org.pbl4.pbl4_be.services.*;
-import org.pbl4.pbl4_be.ws.services.MessagingService;
+import org.pbl4.pbl4_be.ws.services.WSService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,39 +20,41 @@ import java.util.Objects;
 import java.util.Random;
 import java.util.logging.Logger;
 
+import static org.pbl4.pbl4_be.Constants.*;
+
 @RestController
 @RequestMapping("/api/room")
 public class RoomController {
-    private final GameRoomManager gameRoomManager;
     private final SimpMessagingTemplate messagingTemplate;
     private Logger logger = Logger.getLogger(RoomController.class.getName());
     private final UserService userService;
-    private final MessagingService messagingService;
+    private final WSService messagingService;
     private final SeasonService seasonService;
     private final PlayerSeasonService playerSeasonService;
-
     private final RoomDBService roomDBService;
 
+    private final WSService wsService;
+
     @Autowired
-    public RoomController(GameRoomManager gameRoomManager, SimpMessagingTemplate messagingTemplate, MessagingService messagingService, UserService userService, SeasonService seasonService, PlayerSeasonService playerSeasonService, RoomDBService roomDBService) {
-        this.gameRoomManager = gameRoomManager;
+    public RoomController(GameRoomManager gameRoomManager, SimpMessagingTemplate messagingTemplate, WSService messagingService, UserService userService, SeasonService seasonService, PlayerSeasonService playerSeasonService, RoomDBService roomDBService, WSService wsService) {
         this.messagingTemplate = messagingTemplate;
         this.userService = userService;
         this.messagingService = messagingService;
         this.seasonService = seasonService;
         this.playerSeasonService = playerSeasonService;
         this.roomDBService = roomDBService;
+        this.wsService = wsService;
     }
 
     // Xử lý yêu cầu tham gia phòng
     @PostMapping("/join")
     public ResponseEntity<Object> join(@RequestParam("roomCode") String roomCode, @AuthenticationPrincipal UserDetailsImpl currentUser) {
         Long userId = currentUser.getId();
-        if (gameRoomManager.getRoom(roomCode) == null) {
+        if (GameRoomManager.getInstance().getRoom(roomCode) == null) {
             throw new BadRequestException("Room not found");
         }
 
-        String roomCodeOfPlayer = gameRoomManager.getRoomCodeByPlayerId(userId);
+        String roomCodeOfPlayer = GameRoomManager.getInstance().getRoomCodeByPlayerId(userId);
 
         // Kiểm tra player đã tham gia phòng khác chưa
         if (roomCodeOfPlayer != null && !Objects.equals(roomCode, roomCodeOfPlayer)) {
@@ -60,7 +62,7 @@ public class RoomController {
         }
 
         // Room này đảm bảo đã tồn tại
-        Room room = gameRoomManager.getRoom(roomCode);
+        Room room = GameRoomManager.getInstance().getRoom(roomCode);
 
         //  nếu phòng chưa full thì thêm player vào phòng
         if (!room.checkFull() && !room.checkPlayerExist(userId)) {
@@ -84,42 +86,29 @@ public class RoomController {
              * Nếu game đang chờ chơi thì bắt đầu game
              * Nếu không thì gửi lại trạng thái của game trước đó
              */
+
+            GameState gameState = null;
+
             if (lastGame.getGameStatus() != GameStatus.STARTED && room.isAllPlayerIsReady()) {
                 System.out.println("Bắt đầu game");
                 room.startGame();
-                if(room.getRoomId() == null) {
+                gameState = getGameStart(room);
+                wsService.sendAllPlayers(room.getPlayers(), GAME_START_TOPIC + roomCode, gameState);
+                if (room.getRoomId() == null) {
                     RoomDB roomDB = new RoomDB(room);
                     roomDB = roomDBService.save(roomDB);
                     room.setRoomId(roomDB.getId());
                 }
             }
 
-            // get thông tin người chơi
-            Player player1 = room.getPlayers().get(0);
-            Player player2 = room.getPlayers().get(1);
-
-            GameState gameState = GameState.builder()
-                    .roomCode(roomCode)
-                    .startPlayerId(lastGame.getFirstPlayerInfo().getPlayerId())
-                    .nthMove(lastGame.getNthMove())
-                    .lastMove(lastGame.getLastMove())
-                    .gameConfig(room.getGameConfig())
-                    .winnerId(lastGame.getWinnerId())
-                    .build();
-
-            if(Objects.equals(player1.getId(), lastGame.getFirstPlayerId())) {
-                gameState.setPlayer1Info(new PlayerForGameState(player1, lastGame.getFirstPlayerInfo()));
-                gameState.setPlayer2Info(new PlayerForGameState(player2, lastGame.getSecondPlayerInfo()));
-            } else {
-                gameState.setPlayer1Info(new PlayerForGameState(player2, lastGame.getSecondPlayerInfo()));
-                gameState.setPlayer2Info(new PlayerForGameState(player1, lastGame.getFirstPlayerInfo()));
+            if (gameState == null) {
+                gameState = getGameStart(room);
             }
 
-            gameState.setBoardState(lastGame.getBoard());
-            messagingTemplate.convertAndSend("/topic/game-state/" + roomCode, gameState);
+            wsService.sendToUser(userId, GAME_STATE_TOPIC + roomCode, gameState);
+            wsService.sendToUser(userId, SPECTATORS_TOPIC + roomCode, room.getSpectators());
         }
 
-        System.out.println("Số lượng game trong room: " + room.getGames().size());
 
         JoinRoomResponse response = JoinRoomResponse.builder()
                 .roomCode(roomCode)
@@ -130,13 +119,50 @@ public class RoomController {
         // Set participant type
         if (!room.checkPlayerExist(userId)) {
             response.setParticipantType(ParticipantType.SPECTATOR);
-            room.addSpectator(Player.builder().id(userId).build());
+            User user = userService.findById(userId).orElseThrow(() -> new BadRequestException("User not found"));
+            room.addSpectator(Player.builder()
+                    .id(user.getId())
+                    .name(user.getName())
+                    .avatar(user.getAvatar())
+                    .build()
+            );
+            wsService.sendAllPlayers(room.getPlayers(), SPECTATORS_TOPIC + roomCode, room.getSpectators());
         }
 
         // Return a response with the room details
+
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
+
+    private GameState getGameStart(Room room) {
+        String roomCode = room.getRoomCode();
+        Game lastGame = room.getLastGame();
+        Player player1 = room.getPlayers().get(0);
+        Player player2 = room.getPlayers().get(1);
+
+        GameState gameState = GameState.builder()
+                .roomCode(roomCode)
+                .startPlayerId(lastGame.getFirstPlayerInfo().getPlayerId())
+                .nthMove(lastGame.getNthMove())
+                .lastMove(lastGame.getLastMove())
+                .gameConfig(room.getGameConfig())
+                .winnerId(lastGame.getWinnerId())
+                .spectators(room.getSpectators())
+                .build();
+
+        if (Objects.equals(player1.getId(), lastGame.getFirstPlayerId())) {
+            gameState.setPlayer1Info(new PlayerForGameState(player1, lastGame.getFirstPlayerInfo()));
+            gameState.setPlayer2Info(new PlayerForGameState(player2, lastGame.getSecondPlayerInfo()));
+        } else {
+            gameState.setPlayer1Info(new PlayerForGameState(player2, lastGame.getSecondPlayerInfo()));
+            gameState.setPlayer2Info(new PlayerForGameState(player1, lastGame.getFirstPlayerInfo()));
+        }
+
+        gameState.setBoardState(lastGame.getBoard());
+
+        return gameState;
+    }
 
 
     @PostMapping("/create")
@@ -147,14 +173,14 @@ public class RoomController {
         // Kiểm tra player đã tham gia phòng khác chưa
         logger.info("User Id: " + userId + " Create room!");
 
-        String roomCodeOfPlayer = gameRoomManager.getRoomCodeByPlayerId(userId);
+        String roomCodeOfPlayer = GameRoomManager.getInstance().getRoomCodeByPlayerId(userId);
 
         if (roomCodeOfPlayer != null) {
             throw new PlayerAlreadyInRoomException(HttpStatus.CONFLICT, "Player is playing in another room", roomCodeOfPlayer);
         }
 
         String codeRandom = randomRoomCode();
-        while (gameRoomManager.checkRoomExist(codeRandom)) {
+        while (GameRoomManager.getInstance().checkRoomExist(codeRandom)) {
             codeRandom = randomRoomCode();
         }
 
@@ -162,7 +188,7 @@ public class RoomController {
          * Mặc định tạo game lúc tạo phòng với người chơi đầu tiên là người tạo phòng
          * Game này sẽ được bắt đầu khi phòng đã đủ người chơi
          */
-        Room room = gameRoomManager.createRoom(codeRandom, gameConfig);
+        Room room = GameRoomManager.getInstance().createRoom(codeRandom, gameConfig);
 
         logger.info("Room created with code: " + room.getRoomCode());
         // Add the owner to the room
@@ -186,8 +212,8 @@ public class RoomController {
     public ResponseEntity<?> leaveRoom(@AuthenticationPrincipal UserDetailsImpl currentUser) {
         Long userId = currentUser.getId();
 
-        String playerRoomCode = gameRoomManager.getRoomCodeByPlayerId(userId);
-        String spectatorRoomCode = gameRoomManager.getRoomCodeBySpectatorId(userId);
+        String playerRoomCode = GameRoomManager.getInstance().getRoomCodeByPlayerId(userId);
+        String spectatorRoomCode = GameRoomManager.getInstance().getRoomCodeBySpectatorId(userId);
 
         String roomCode = playerRoomCode != null ? playerRoomCode : spectatorRoomCode;
 
@@ -196,14 +222,14 @@ public class RoomController {
             throw new BadRequestException("Player is not in any room");
         }
 
-        Room room = gameRoomManager.getRoom(roomCode);
+        Room room = GameRoomManager.getInstance().getRoom(roomCode);
 
 
         if (room == null) {
             throw new BadRequestException("Room not found");
         }
 
-        logger.info("Số lượng phòng trong hệ thống: " + gameRoomManager.getRoomsSize());
+        logger.info("Số lượng phòng trong hệ thống: " + GameRoomManager.getInstance().getRoomsSize());
 
         /*
          * Có 3 trường hợp xảy ra:
@@ -213,28 +239,29 @@ public class RoomController {
          */
         // 1
         if (room.getPlayers().size() == 1) {
-            gameRoomManager.removeRoom(roomCode);
-            logger.info("Số lượng phòng trong hệ thống: " + gameRoomManager.getRoomsSize());
+            GameRoomManager.getInstance().removeRoom(roomCode);
+            logger.info("Số lượng phòng trong hệ thống: " + GameRoomManager.getInstance().getRoomsSize());
             return ResponseEntity.status(HttpStatus.OK).body(RoomResponse.builder().roomCode(roomCode).build());
         }
 
         // 2
+
         if (room.checkPlayerExist(userId)) {
             room.removePlayer(userId);
             Game gamePlaying = room.getGamePlaying();
             if (gamePlaying != null && gamePlaying.getGameStatus() == GameStatus.STARTED) {
                 gamePlaying.setWinnerId(gamePlaying.getFirstPlayerId().equals(userId) ? gamePlaying.getSecondPlayerId() : gamePlaying.getFirstPlayerId());
                 gamePlaying.setGameStatus(GameStatus.ENDED);
-                if(roomDBService.FindById(room.getRoomId()) != null) {
+                if (roomDBService.FindById(room.getRoomId()) != null) {
                     Season season = seasonService.findCurrentSeason().orElse(null);
-                    if(season != null) {
+                    if (season != null) {
                         PlayerSeason playerSeason1 = playerSeasonService.findBySeasonIdAndPlayerId(season.getId(), gamePlaying.getFirstPlayerId()).orElse(new PlayerSeason(userService.findById(gamePlaying.getFirstPlayerId()).orElse(null), season));
                         PlayerSeason playerSeason2 = playerSeasonService.findBySeasonIdAndPlayerId(season.getId(), gamePlaying.getSecondPlayerId()).orElse(new PlayerSeason(userService.findById(gamePlaying.getSecondPlayerId()).orElse(null), season));
                         playerSeason1.updateScore(gamePlaying.getFirstPlayerId().equals(gamePlaying.getWinnerId()), false);
                         playerSeason2.updateScore(gamePlaying.getSecondPlayerId().equals(gamePlaying.getWinnerId()), false);
-                        if(playerSeason1.getWinStreak() != 0){
+                        if (playerSeason1.getWinStreak() != 0) {
                             playerSeason1.bonusScoreTime(gamePlaying.getFirstPlayerInfo().getRemainTime(), gamePlaying.getSecondPlayerInfo().getRemainTime());
-                        }else if(playerSeason2.getWinStreak() != 0){
+                        } else if (playerSeason2.getWinStreak() != 0) {
                             playerSeason2.bonusScoreTime(gamePlaying.getSecondPlayerInfo().getRemainTime(), gamePlaying.getFirstPlayerInfo().getRemainTime());
                         }
                         room.updateSeasonScore(playerSeason1);
@@ -251,6 +278,7 @@ public class RoomController {
             }
         } else if (room.checkSpectatorExist(userId)) {
             room.removeSpectator(userId);
+            wsService.sendAllPlayers(room.getPlayers(), SPECTATORS_TOPIC + roomCode, room.getSpectators());
         } else {
             throw new BadRequestException("Player is not in any room");
         }

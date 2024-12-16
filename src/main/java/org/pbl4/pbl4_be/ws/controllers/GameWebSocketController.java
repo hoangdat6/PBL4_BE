@@ -4,7 +4,7 @@ import org.pbl4.pbl4_be.enums.GameStatus;
 import org.pbl4.pbl4_be.enums.PlayAgainCode;
 import org.pbl4.pbl4_be.models.*;
 import org.pbl4.pbl4_be.services.*;
-import org.pbl4.pbl4_be.ws.services.MessagingService;
+import org.pbl4.pbl4_be.ws.services.WSService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -17,12 +17,15 @@ import org.springframework.stereotype.Controller;
 import java.time.Duration;
 import java.time.LocalDateTime;
 
+import static org.pbl4.pbl4_be.Constants.GAME_PROGRESS_TOPIC;
+import static org.pbl4.pbl4_be.Constants.PLAY_AGAIN_TOPIC;
+
 @Controller
 public class GameWebSocketController {
-    private final GameRoomManager gameRoomManager;
-    private final MessagingService messagingService;
+    private final WSService wsService;
 
     private final RoomDBService roomDBService;
+    private final SimpMessagingTemplate messagingTemplate;
 
     private final PlayerSeasonService playerSeasonService;
     private final SeasonService seasonService;
@@ -30,20 +33,20 @@ public class GameWebSocketController {
 
 
     @Autowired
-    public GameWebSocketController(GameRoomManager gameRoomManager, SimpMessagingTemplate messagingTemplate, MessagingService messagingService, RoomDBService roomDBService, PlayerSeasonService playerSeasonService, SeasonService seasonService, UserService userService) {
-        this.gameRoomManager = gameRoomManager;
-        this.messagingService = messagingService;
+    public GameWebSocketController(GameRoomManager gameRoomManager, SimpMessagingTemplate messagingTemplate, WSService wsService, RoomDBService roomDBService, SimpMessagingTemplate messagingTemplate1, PlayerSeasonService playerSeasonService, SeasonService seasonService, UserService userService) {
+        this.wsService = wsService;
         this.roomDBService = roomDBService;
+        this.messagingTemplate = messagingTemplate1;
         this.playerSeasonService = playerSeasonService;
         this.seasonService = seasonService;
         this.userService = userService;
     }
 
     @MessageMapping("/move/{roomCode}")
-    @SendTo("/topic/game-progress/{roomCode}")
+    @SendTo(GAME_PROGRESS_TOPIC + "{roomCode}")
     public GameMove makeMove(@DestinationVariable String roomCode, @Payload GameMove move) {
         // Xử lý nước đi của người chơi
-        Room room = gameRoomManager.getRoom(roomCode);
+        Room room = GameRoomManager.getInstance().getRoom(roomCode);
 
         Game game = room.getGamePlaying();
         move.setDuration((int) Duration.between(game.getStartTimeMove(), LocalDateTime.now()).getSeconds());
@@ -80,7 +83,7 @@ public class GameWebSocketController {
             }
             room.setPlayerIsReady(false);
             setGameEnd(room, game);
-            messagingService.sendGameEndMessage(roomCode, game.getWinnerId());
+            wsService.sendGameEndMessage(roomCode, game.getWinnerId());
             if(roomDBService.FindById(room.getRoomId()) != null) {
                 RoomDB roomDB = roomDBService.FindById(room.getRoomId());
                 roomDB.addGame(game);
@@ -109,7 +112,7 @@ public class GameWebSocketController {
                 roomDB.addGame(game);
                 roomDBService.save(roomDB);
             }
-            messagingService.sendGameEndMessage(roomCode, null);
+            wsService.sendGameEndMessage(roomCode, null);
         }
 
         return move;
@@ -121,9 +124,9 @@ public class GameWebSocketController {
     }
 
     @MessageMapping("/play-again/{roomCode}")
-    @SendTo("/topic/play-again/{roomCode}")
+    @SendTo(PLAY_AGAIN_TOPIC + "{roomCode}")
     public ResponseEntity<?> playAgain(@DestinationVariable String roomCode, @Payload PlayAgainRequest request) {
-        Room room = gameRoomManager.getRoom(roomCode);
+        Room room = GameRoomManager.getInstance().getRoom(roomCode);
         Game game = room.getLastGame();
         Player player = room.getPlayerById(request.getPlayerId());
 
@@ -144,7 +147,7 @@ public class GameWebSocketController {
     @MessageMapping("/winner/{roomCode}")
     @SendTo("/topic/winner/{roomCode}")
     public ResponseEntity<?> getWinner(@DestinationVariable String roomCode, @Payload Long winnerId) {
-        Room room = gameRoomManager.getRoom(roomCode);
+        Room room = GameRoomManager.getInstance().getRoom(roomCode);
         Game game = room.getLastGame();
 
         game.setWinnerId(winnerId);
@@ -152,4 +155,24 @@ public class GameWebSocketController {
 
         return ResponseEntity.ok(winnerId);
     }
+
+
+    @MessageMapping("/message/{roomCode}")
+    public void sendMessage(@DestinationVariable String roomCode, @Payload Message message) {
+        Room room = GameRoomManager.getInstance().getRoom(roomCode);
+
+        message.setSendTime(LocalDateTime.now());
+        room.addMessage(message);
+
+        for(Player player : room.getPlayers()) {
+            if(player.getId().equals(message.getSenderId())) continue;
+
+            messagingTemplate.convertAndSendToUser(
+                    String.valueOf(player.getId()),
+                    "/queue/message/" + roomCode,
+                    message
+            );
+        }
+    }
+
 }

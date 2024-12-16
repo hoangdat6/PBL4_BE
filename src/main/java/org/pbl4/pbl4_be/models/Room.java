@@ -25,6 +25,7 @@ public class Room {
     private GameStatus roomStatusTypes;
     private String password;
     private boolean isPrivate;
+    private List<Message> messages;
 
     public Room(String roomCode, GameConfig gameConfig) {
         this.roomCode = roomCode;
@@ -34,6 +35,7 @@ public class Room {
         this.spectators = new ArrayList<>();
         this.nextGameId = 1;
         this.roomStatusTypes = GameStatus.NOT_STARTED;
+        this.messages = new ArrayList<>();
     }
 
     public Game addGame() {
@@ -41,6 +43,10 @@ public class Room {
         games.add(newGame);
         nextGameId++;
         return newGame;
+    }
+
+    public void addMessage(Message message) {
+        messages.add(message);
     }
 
     public boolean isEnd() {
@@ -120,12 +126,6 @@ public class Room {
     }
 
     public boolean checkFull() {
-//        for (Player player : players) {
-//            if (player.isLeaveRoom()) {
-//                return false;
-//            }
-//        }
-
         return players.size() == MAX_PLAYER;
     }
 
@@ -156,11 +156,7 @@ public class Room {
     }
 
     public void removeSpectator(Long playerId) {
-        spectators.forEach(player -> {
-            if(player.getId().equals(playerId)) {
-                player.setLeaveRoom(true);
-            }
-        });
+        spectators.removeIf(player -> player.getId().equals(playerId));
     }
 
     public void startGame() {
