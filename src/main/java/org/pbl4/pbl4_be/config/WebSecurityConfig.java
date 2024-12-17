@@ -1,5 +1,6 @@
 package org.pbl4.pbl4_be.config;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -22,6 +23,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+@Slf4j
 @Configuration
 @EnableMethodSecurity  // Cho phép các annotation bảo mật ở cấp độ phương thức như @PreAuthorize
 public class WebSecurityConfig {
@@ -77,6 +79,7 @@ public class WebSecurityConfig {
     // Cấu hình chuỗi lọc bảo mật
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        log.info("Configuring security filter chain");
         http.csrf(csrf -> csrf.disable()) // Tắt CSRF
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler)) // Xử lý lỗi xác thực
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Không tạo session
@@ -84,6 +87,7 @@ public class WebSecurityConfig {
                         auth.requestMatchers("/api/auth/**").permitAll() // Cho phép truy cập vào các endpoint auth
                                 .requestMatchers("/api/room/**").permitAll() // Cho phép truy cập vào các endpoint thử nghiệm
                                 .requestMatchers("/ws/**").permitAll()
+                                .requestMatchers("/api/test/all").permitAll()
                                 .anyRequest().authenticated() // Yêu cầu xác thực cho tất cả các yêu cầu còn lại
                 );
 
