@@ -20,13 +20,16 @@ public class Season {
     @NotBlank
     @Column(name="name")
     private String name;
-    @NotBlank
+
+//    @NotBlank
     @Column(name="start_date")
     private LocalDateTime startDate;
-    @NotBlank
+
+//    @NotBlank
     @Column(name="end_date")
     private LocalDateTime endDate;
-    @NotBlank
+
+//    @NotBlank
     @Column(name="reward")
     private String reward;
 

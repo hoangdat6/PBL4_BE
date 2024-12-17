@@ -8,6 +8,7 @@ import java.util.Optional;
 @Service
 public class SeasonService {
     private final SeasonRepository seasonRepository;
+
     SeasonService(SeasonRepository seasonRepository) {
         this.seasonRepository = seasonRepository;
     }
@@ -16,4 +17,7 @@ public class SeasonService {
         return seasonRepository.findCurrentSeason();
     }
 
+    public void addSeason(Season season) {
+        seasonRepository.save(season);
+    }
 }
