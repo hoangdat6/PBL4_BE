@@ -42,6 +42,7 @@ public class JwtUtils {
     public ResponseCookie generateJwtCookie(UserDetailsImpl userPrincipal) {
         String jwt = generateTokenFromEmail(userPrincipal.getEmail());
         return ResponseCookie.from(jwtCookieName, jwt)
+                .sameSite("None")  // Chỉ gửi cookie cho các trang web cùng một nguồn gốc
                 .path("/")  // Chỉ gửi cookie cho các đường dẫn `/`
                 .maxAge(jwtExpirationMs / 1000)  // Chuyển ms thành giây
                 .httpOnly(true)
@@ -49,6 +50,7 @@ public class JwtUtils {
     }
     public ResponseCookie getCleanJwtCookie() {
         return ResponseCookie.from(jwtCookieName, "")
+                .sameSite("None")
                 .path("/")
                 .maxAge(0)    // Đặt tuổi thọ cookie là 0 để xóa ngay lập tức
                 .httpOnly(true)
