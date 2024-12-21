@@ -45,6 +45,7 @@ public class JwtUtils {
                 .sameSite("None")  // Chỉ gửi cookie cho các trang web cùng một nguồn gốc
                 .path("/")  // Chỉ gửi cookie cho các đường dẫn `/`
                 .maxAge(jwtExpirationMs / 1000)  // Chuyển ms thành giây
+                .secure(true)
                 .httpOnly(true)
                 .build();
     }
@@ -54,6 +55,7 @@ public class JwtUtils {
                 .path("/")
                 .maxAge(0)    // Đặt tuổi thọ cookie là 0 để xóa ngay lập tức
                 .httpOnly(true)
+                .secure(true)
                 .build();
     }
 
