@@ -26,7 +26,6 @@ public class GameWebSocketController {
 
     private final RoomDBService roomDBService;
     private final SimpMessagingTemplate messagingTemplate;
-
     private final PlayerSeasonService playerSeasonService;
     private final SeasonService seasonService;
     private final UserService userService;
@@ -51,7 +50,7 @@ public class GameWebSocketController {
         Game game = room.getGamePlaying();
         move.setDuration((int) Duration.between(game.getStartTimeMove(), LocalDateTime.now()).getSeconds());
         game.getMoveList().add(move);
-//        game.resetRemainMoveTime(move.getPlayerTurnId());
+        game.resetRemainMoveTime(move.getPlayerTurnId());
 
         if (game.processMove(move))
             move.setWin(true);
