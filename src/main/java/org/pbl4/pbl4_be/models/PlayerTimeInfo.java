@@ -36,6 +36,29 @@ public class PlayerTimeInfo {
         this.lastUpdateTime = LocalDateTime.now();
     }
 
+//    public void setTimeInfo(Integer moveDuration, LocalDateTime startTimeMove){
+//        // Tính toán thời gian còn lại trong lượt hiện tại
+//        int timePassedInMove = moveDuration - (int) Duration.between(startTimeMove, LocalDateTime.now()).getSeconds();
+//        this.remainMoveDuration = max(0, timePassedInMove);
+//
+//        // Nếu thời gian lượt di chuyển hết (remainMoveDuration == 0), tính lại thời gian tổng còn lại
+//        if (remainMoveDuration == 0) {
+//            int timePassedInTotal = (int) Duration.between(lastUpdateTime, LocalDateTime.now()).getSeconds();
+//            this.remainTime = max(0, remainTime - timePassedInTotal);
+//        } else {
+//            // Nếu lượt di chuyển chưa hết, chỉ tính thời gian đã trôi qua trong lượt này
+//            int timePassedInMoveDuringUpdate = (int) Duration.between(lastUpdateTime, LocalDateTime.now()).getSeconds();
+//            this.remainTime = max(0, remainTime - timePassedInMoveDuringUpdate);
+//        }
+//
+//        // Cộng thêm thời gian đã trôi qua vào playedTime
+//        this.playedTime += (int) Duration.between(lastUpdateTime, LocalDateTime.now()).getSeconds();
+//
+//        // Cập nhật thời gian của lần gọi setTimeInfo
+//        this.lastUpdateTime = LocalDateTime.now();
+//    }
+
+
     public void setInitialTimeInfo(Integer moveDuration){
         this.remainMoveDuration = moveDuration;
         this.playedTime = 0;

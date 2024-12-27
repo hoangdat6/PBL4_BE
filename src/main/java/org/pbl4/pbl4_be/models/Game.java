@@ -16,8 +16,8 @@ public class  Game {
     private String roomId;
     private Long winnerId;
     private Board board;
-    private PlayerTimeInfo firstPlayerInfo;
-    private PlayerTimeInfo secondPlayerInfo;
+    private PlayerTimeInfo firstPlayerInfo; // thông tin người chơi đi nước đầu tiên
+    private PlayerTimeInfo secondPlayerInfo; // thông tin người chơi đi nước thứ hai
     private short nthMove;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
@@ -62,7 +62,7 @@ public class  Game {
         this.nthMove++;
     }
 
-    public boolean  processMove(GameMove move) {
+    public boolean processMove(GameMove move) {
         // Xử lý nước đi của người chơi
         board.setMove(move.getRow(), move.getCol(), (byte) (move.getNthMove() % 2));
         setStartTimeMove();
@@ -106,13 +106,26 @@ public class  Game {
     public Long getSecondPlayerId() {
         return secondPlayerInfo.getPlayerId();
     }
+
     public PlayerTimeInfo getFirstPlayerInfo() {
-        firstPlayerInfo.setTimeInfo(moveDuration, startTimeMove);
+        if(nthMove % 2 == 0){
+            firstPlayerInfo.setTimeInfo(moveDuration, startTimeMove);
+        }
         return firstPlayerInfo;
     }
 
     public PlayerTimeInfo getSecondPlayerInfo() {
-        secondPlayerInfo.setTimeInfo(moveDuration, startTimeMove);
+        if(nthMove % 2 == 1){
+            secondPlayerInfo.setTimeInfo(moveDuration, startTimeMove);
+        }
         return secondPlayerInfo;
+    }
+
+    public void resetRemainMoveTime(Long playerTurnId) {
+        if(playerTurnId.equals(firstPlayerInfo.getPlayerId())){
+            this.firstPlayerInfo.setInitialTimeInfo(moveDuration);
+        }else {
+            this.secondPlayerInfo.setInitialTimeInfo(moveDuration);
+        }
     }
 }
