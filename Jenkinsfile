@@ -5,7 +5,7 @@ pipeline {
     agent any
     environment {
         GIT_URL = 'git@github.com:hoangdat6/PBL4_BE.git'
-        SSH_ID_REF = 'hoangdat6'
+        SSH_ID_REF = 'GitSSH'
     }
 
     stages {
