@@ -58,32 +58,57 @@ public class UserService {
         return 1200;
     }
 
+    /**
+     * Find profile by user id
+     * @param userId user id
+     * @return profile dto
+     */
     public Optional<ProfileDTO> findProfileById(Long userId) {
         User user = userRepository.findById(userId).orElse(null);
         if (user == null) {
             return Optional.empty();
         }
-
+        /**
+            * Get current season
+            * Get player season by season id and player id
+         */
         Season currentSeason = seasonRepository.findCurrentSeason().orElse(null);
 
-        assert currentSeason != null;
+        /**
+         * Create profile dto
+         */
+        ProfileDTO profileDTO = ProfileDTO.builder()
+                .id(user.getId())
+                .name(user.getName())
+                .avatar(user.getAvatar())
+
+                .playTimes(intToTime(getPlayerTimeById(userId)))
+                .dateJoined(
+                        user.getCreatedAt().getDayOfMonth() + "/" +
+                                user.getCreatedAt().getMonthValue() + "/" +
+                                user.getCreatedAt().getYear()
+                )
+                .build();
+
         PlayerSeason playerSeason = playerSeasonRepository.findBySeasonIdAndPlayerId(currentSeason.getId(), userId).orElse(null);
 
-        assert playerSeason != null;
-        return Optional.of(
-                ProfileDTO.builder()
-                        .id(user.getId())
-                        .name(user.getName())
-                        .avatar(user.getAvatar())
-                        .draws(playerSeason.getDrawCount())
-                        .losses(playerSeason.getLoseCount())
-                        .wins(playerSeason.getWinCount())
-                        .points(playerSeason.getScore())
-                        .playTimes(intToTime(getPlayerTimeById(userId)))
-                        .build()
-        );
-    }
+        if (playerSeason != null) {
+            profileDTO.setRank(-1);
+            profileDTO.setPoints(playerSeason.getScore());
+            profileDTO.setWins(playerSeason.getWinCount());
+            profileDTO.setDraws(playerSeason.getDrawCount());
+            profileDTO.setLosses(playerSeason.getLoseCount());
+            profileDTO.setStreaks(playerSeason.getWinStreak());
+        } else {
+            profileDTO.setPoints(0);
+            profileDTO.setWins(0);
+            profileDTO.setDraws(0);
+            profileDTO.setLosses(0);
+            profileDTO.setStreaks(0);
+        }
 
+        return Optional.of(profileDTO);
+    }
 
     /**
      * Convert integer to time format
@@ -95,5 +120,4 @@ public class UserService {
         int minutes = time % 60;
         return hours + "h " + minutes + "m";
     }
-
 }

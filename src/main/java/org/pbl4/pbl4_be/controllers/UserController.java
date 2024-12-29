@@ -47,10 +47,10 @@ public class UserController {
         return ResponseEntity.ok(result);
     }
 
-    @GetMapping("/profile")
-    public ResponseEntity<?> getProfile(@AuthenticationPrincipal UserDetailsImpl currentUser) {
-        return ResponseEntity.ok(userService.findProfileById(currentUser.getId()).orElse(null));
-    }
+//    @GetMapping("/profile")
+//    public ResponseEntity<?> getProfile(@AuthenticationPrincipal UserDetailsImpl currentUser) {
+//        return ResponseEntity.ok(userService.findProfileById(currentUser.getId()).orElse(null));
+//    }
 
     @GetMapping("/info")
     public ResponseEntity<?> getInfo(@AuthenticationPrincipal UserDetailsImpl currentUser) {
@@ -78,6 +78,13 @@ public class UserController {
         user.setName(accountDTO.getName());
         userService.save(user);
         return ResponseEntity.ok().build();
+    }
 
+    @DeleteMapping("/account")
+    public ResponseEntity<?> deleteAccount(@AuthenticationPrincipal UserDetailsImpl currentUser) {
+        User user = userService.findById(currentUser
+                .getId()).orElseThrow(() -> new BadRequestException("User not found"));
+        userService.delete(user);
+        return ResponseEntity.ok().build();
     }
 }
