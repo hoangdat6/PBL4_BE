@@ -21,4 +21,5 @@ public class ProfileDTO {
     private Integer losses;
     private Integer streaks;
     private String playTimes;
+    private String dateJoined;
 }
