@@ -15,9 +15,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
     Boolean existsByEmail(String email);
 
-    @Query("SELECT new org.pbl4.pbl4_be.controllers.dto.ProfileDTO(u.id, u.name, u.avatar, u.email, u.maxRating, u.lastSeason, u.lastLogin) " +
-            "FROM User u " +
-            "WHERE u.id = :userId")
-    Optional<ProfileDTO> findProfileById(@Param("userId") Long userId);
-
+    Optional<User> findUserById(@Param("id") Long id);
 }
