@@ -85,6 +85,7 @@ public class WebSecurityConfig {
                         auth.requestMatchers("/api/auth/**").permitAll() // Cho phép truy cập vào các endpoint auth
                                 .requestMatchers("/api/room/**").permitAll() // Cho phép truy cập vào các endpoint thử nghiệm
                                 .requestMatchers("/ws/**").permitAll()
+                                .requestMatchers("/api/test/**").permitAll()
                                 .anyRequest().authenticated() // Yêu cầu xác thực cho tất cả các yêu cầu còn lại
                 );
 
