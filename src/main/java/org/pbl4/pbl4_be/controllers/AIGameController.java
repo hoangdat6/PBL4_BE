@@ -82,9 +82,11 @@ public class AIGameController {
 
     @PostMapping("/create")
     public ResponseEntity<?> create() {
-        AIGameService aiGameService = new AIGameService(false);
+        System.out.println(gameRoomManager.size());
+        AIGameService aiGameService = new AIGameService(true);
         String roomCode = aiGameService.getRoomCode();
         gameRoomManager.put(roomCode, aiGameService);
+        System.out.println("New size: " + gameRoomManager.size());
         return ResponseEntity.ok(roomCode);
     }
 }
