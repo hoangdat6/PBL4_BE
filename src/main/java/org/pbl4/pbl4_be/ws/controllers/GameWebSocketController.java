@@ -70,6 +70,8 @@ public class GameWebSocketController {
                 PlayerSeason playerSeason2 = playerSeasonService.findBySeasonIdAndPlayerId(season.getId(), game.getSecondPlayerId()).orElse(new PlayerSeason(userService.findById(game.getSecondPlayerId()).orElse(null), season));
                 playerSeason1.updateScore(game.getFirstPlayerId().equals(game.getWinnerId()), false);
                 playerSeason2.updateScore(game.getSecondPlayerId().equals(game.getWinnerId()), false);
+                playerSeason1.increasePlayerTime(room.getGameConfig().getTotalTime() - game.getFirstPlayerInfo().getRemainTime());
+                playerSeason2.increasePlayerTime(room.getGameConfig().getTotalTime() - game.getSecondPlayerInfo().getRemainTime());
                 if(playerSeason1.getWinStreak() != 0){
                     playerSeason1.bonusScoreTime(game.getFirstPlayerInfo().getRemainTime(), game.getSecondPlayerInfo().getRemainTime());
                 }else if(playerSeason2.getWinStreak() != 0){

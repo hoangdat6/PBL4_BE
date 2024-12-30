@@ -11,4 +11,5 @@ import java.util.Optional;
 public interface SeasonRepository extends JpaRepository<Season, Long>{
     @Query("SELECT s FROM Season s WHERE s.startDate <= CURRENT_TIMESTAMP AND s.endDate >= CURRENT_TIMESTAMP")
     Optional<Season> findCurrentSeason();
+
 }

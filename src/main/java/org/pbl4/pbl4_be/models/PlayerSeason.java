@@ -48,6 +48,9 @@ public class PlayerSeason {
     @Column(name = "draw_count")
     private Integer drawCount;
 
+    @Column(name = "player_time")
+    private Integer playerTime;
+
     public PlayerSeason() {
 
     }
@@ -59,6 +62,7 @@ public class PlayerSeason {
         winCount = 0;
         loseCount = 0;
         drawCount = 0;
+        playerTime = 0;
     }
 
     public PlayerSeason(User player, Season season) {
@@ -67,6 +71,7 @@ public class PlayerSeason {
         winCount = 0;
         loseCount = 0;
         drawCount = 0;
+        playerTime = 0;
         this.player = player;
         this.season = season;
     }
@@ -96,6 +101,10 @@ public class PlayerSeason {
     public void bonusScoreTime(Integer myTime, Integer opponentTime) {
         int time = (myTime - opponentTime) / 60;
         score += min(5, max(0, time - 1));
+    }
+
+    public void increasePlayerTime(Integer time) {
+        playerTime += time;
     }
 
 }
