@@ -19,9 +19,18 @@ public class AIGameController {
     private final Map<String, AIGameService> gameRoomManager = new HashMap<>();
     private final ExecutorService executorService = Executors.newCachedThreadPool();
 
+    @PostMapping("/create")
+    public ResponseEntity<?> create() {
+        System.out.println(gameRoomManager.size());
+        AIGameService aiGameService = new AIGameService(true);
+        String roomCode = aiGameService.getRoomCode();
+        gameRoomManager.put(roomCode, aiGameService);
+        System.out.println("New size: " + gameRoomManager.size());
+        return ResponseEntity.ok(roomCode);
+    }
 
     @PostMapping("/join")
-    public ResponseEntity<?> join(@RequestParam String roomCode, @AuthenticationPrincipal UserDetailsImpl currentUser) {
+    public ResponseEntity<?> join(@AuthenticationPrincipal UserDetailsImpl currentUser, @RequestParam String roomCode) {
         AIGameService aiGameService = gameRoomManager.get(roomCode);
         Long userId = currentUser.getId();
         if(aiGameService == null) {
@@ -63,7 +72,7 @@ public class AIGameController {
     }
 
     @PostMapping("/leave")
-    public boolean leave(@RequestParam String roomCode, @AuthenticationPrincipal UserDetailsImpl currentUser) {
+    public boolean leave(@AuthenticationPrincipal UserDetailsImpl currentUser, @RequestParam String roomCode) {
         AIGameService aiGameService = gameRoomManager.get(roomCode);
         if(aiGameService == null) {
             return false;
@@ -80,13 +89,5 @@ public class AIGameController {
         return true;
     }
 
-    @PostMapping("/create")
-    public ResponseEntity<?> create() {
-        System.out.println(gameRoomManager.size());
-        AIGameService aiGameService = new AIGameService(true);
-        String roomCode = aiGameService.getRoomCode();
-        gameRoomManager.put(roomCode, aiGameService);
-        System.out.println("New size: " + gameRoomManager.size());
-        return ResponseEntity.ok(roomCode);
-    }
+
 }

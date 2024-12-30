@@ -28,8 +28,7 @@ public class GameService {
         this.seasonService = seasonService;
     }
 
-    public LeaderboardResponse getLeaderboard(String rankings, int pageNumber) {
-        int pageSize = 10;
+    public LeaderboardResponse getLeaderboard(String rankings, int pageNumber, int pageSize) {
         Long seasonId = seasonService.findCurrentSeason().isPresent() ? seasonService.findCurrentSeason().get().getId() : null;
         if (seasonId == null) {
             return new LeaderboardResponse(new ArrayList<>(), 0, 0);
