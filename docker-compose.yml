@@ -21,12 +21,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-#    image: test:tag  # Use the locally built image
     container_name: pbl4-be-app
     ports:
       - "5999:5999"
-#    volumes:
-#      - .:/app  # Mount code vào container
     environment:
       - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/pbl4_be?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       - SPRING_DATASOURCE_USERNAME=root
