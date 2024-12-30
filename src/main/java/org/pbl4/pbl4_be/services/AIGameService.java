@@ -1,5 +1,7 @@
 package org.pbl4.pbl4_be.services;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.pbl4.pbl4_be.models.GameMove;
 
 import java.util.Random;
@@ -9,8 +11,11 @@ public class AIGameService {
     private final int n = 16;
     private final long inf = (long)1e18;
     private short count;
-    private byte[][] board;
-    private boolean playerFirst;
+    private final byte[][] board;
+    private final boolean playerFirst;
+    @Getter
+    @Setter
+    private Long playerId;
 
     public AIGameService(boolean playerFirst) {
         board = new byte[n][n];
@@ -348,7 +353,9 @@ public class AIGameService {
         GameMove gameMove = new GameMove();
         if (operations(playerRow, playerCol)) {
             if (checkEnd(playerRow, playerCol, playerSymbol, board)) {
+                System.out.println("End game");
                 winner = playerSymbol;
+                gameMove = new GameMove(-1, -1, count);
             } else {
                 // Khởi tạo các biến để lưu nước đi tốt nhất của bot
                 long bestScore = Long.MIN_VALUE;
@@ -397,5 +404,5 @@ public class AIGameService {
     public String getRoomCode() {
         return randomRoomCode();
     }
-}
 
+}
