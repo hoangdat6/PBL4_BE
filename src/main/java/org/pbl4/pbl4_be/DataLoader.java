@@ -66,8 +66,10 @@ public class DataLoader implements ApplicationRunner {
             ZonedDateTime date = ZonedDateTime.now();
             // Lấy ngày đầu tiên của tháng hiện tại
             LocalDateTime startDate = date.with(TemporalAdjusters.firstDayOfMonth()).toLocalDateTime();
+            startDate = startDate.withHour(0).withMinute(0).withSecond(0).withNano(0);
             // Lấy ngày cuối cùng của tháng hiện tại
             LocalDateTime endDate = date.with(TemporalAdjusters.lastDayOfMonth()).toLocalDateTime();
+            endDate = endDate.withHour(23).withMinute(59).withSecond(59).withNano(999999999);
             // Tạo season mới
 
             System.out.println("startDate: " + startDate);
