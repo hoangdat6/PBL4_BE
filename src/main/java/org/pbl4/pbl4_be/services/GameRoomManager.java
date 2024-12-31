@@ -24,8 +24,8 @@ public class GameRoomManager {
      * Khi tạo room, tạo luôn game đầu tiên cho room đó
      */
 
-    public Room createRoom(String roomId, GameConfig gameConfig) {
-        Room room = new Room(roomId, gameConfig);
+    public Room createRoom(String roomId, GameConfig gameConfig, boolean isPlayOnline) {
+        Room room = new Room(roomId, gameConfig, isPlayOnline);
         rooms.put(roomId, room);
         room.addGame();
         return room;

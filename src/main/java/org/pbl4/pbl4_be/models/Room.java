@@ -26,8 +26,9 @@ public class Room {
     private String password;
     private boolean isPrivate;
     private List<Message> messages;
+    private boolean isPlayOnline;
 
-    public Room(String roomCode, GameConfig gameConfig) {
+    public Room(String roomCode, GameConfig gameConfig, boolean isPlayOnline) {
         this.roomCode = roomCode;
         this.gameConfig = gameConfig;
         this.games = new ArrayList<>();
@@ -36,6 +37,7 @@ public class Room {
         this.nextGameId = 1;
         this.roomStatusTypes = GameStatus.NOT_STARTED;
         this.messages = new ArrayList<>();
+        this.isPlayOnline = isPlayOnline;
     }
 
     public Game addGame() {
