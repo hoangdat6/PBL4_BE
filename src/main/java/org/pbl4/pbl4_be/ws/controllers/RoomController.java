@@ -32,17 +32,18 @@ public class RoomController {
     private final SeasonService seasonService;
     private final PlayerSeasonService playerSeasonService;
     private final RoomDBService roomDBService;
-
+    private final CalculateScoreService calculateScoreService;
     private final WSService wsService;
 
     @Autowired
-    public RoomController(GameRoomManager gameRoomManager, SimpMessagingTemplate messagingTemplate, WSService messagingService, UserService userService, SeasonService seasonService, PlayerSeasonService playerSeasonService, RoomDBService roomDBService, WSService wsService) {
+    public RoomController(GameRoomManager gameRoomManager, SimpMessagingTemplate messagingTemplate, WSService messagingService, UserService userService, SeasonService seasonService, PlayerSeasonService playerSeasonService, RoomDBService roomDBService, CalculateScoreService calculateScoreService, WSService wsService) {
         this.messagingTemplate = messagingTemplate;
         this.userService = userService;
         this.messagingService = messagingService;
         this.seasonService = seasonService;
         this.playerSeasonService = playerSeasonService;
         this.roomDBService = roomDBService;
+        this.calculateScoreService = calculateScoreService;
         this.wsService = wsService;
     }
 
@@ -165,6 +166,12 @@ public class RoomController {
     }
 
 
+    /**
+     * API này chỉ dùng để tạo phòng chơi với bạn bè
+     * @param gameConfig
+     * @param currentUser
+     * @return
+     */
     @PostMapping("/create")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<?> createRoom(@RequestBody GameConfig gameConfig, @AuthenticationPrincipal UserDetailsImpl currentUser) {
@@ -188,7 +195,7 @@ public class RoomController {
          * Mặc định tạo game lúc tạo phòng với người chơi đầu tiên là người tạo phòng
          * Game này sẽ được bắt đầu khi phòng đã đủ người chơi
          */
-        Room room = GameRoomManager.getInstance().createRoom(codeRandom, gameConfig);
+        Room room = GameRoomManager.getInstance().createRoom(codeRandom, gameConfig, false);
 
         logger.info("Room created with code: " + room.getRoomCode());
         // Add the owner to the room
@@ -253,22 +260,7 @@ public class RoomController {
                 gamePlaying.setWinnerId(gamePlaying.getFirstPlayerId().equals(userId) ? gamePlaying.getSecondPlayerId() : gamePlaying.getFirstPlayerId());
                 gamePlaying.setGameStatus(GameStatus.ENDED);
                 if (roomDBService.FindById(room.getRoomId()) != null) {
-                    Season season = seasonService.findCurrentSeason().orElse(null);
-                    if (season != null) {
-                        PlayerSeason playerSeason1 = playerSeasonService.findBySeasonIdAndPlayerId(season.getId(), gamePlaying.getFirstPlayerId()).orElse(new PlayerSeason(userService.findById(gamePlaying.getFirstPlayerId()).orElse(null), season));
-                        PlayerSeason playerSeason2 = playerSeasonService.findBySeasonIdAndPlayerId(season.getId(), gamePlaying.getSecondPlayerId()).orElse(new PlayerSeason(userService.findById(gamePlaying.getSecondPlayerId()).orElse(null), season));
-                        playerSeason1.updateScore(gamePlaying.getFirstPlayerId().equals(gamePlaying.getWinnerId()), false);
-                        playerSeason2.updateScore(gamePlaying.getSecondPlayerId().equals(gamePlaying.getWinnerId()), false);
-                        if (playerSeason1.getWinStreak() != 0) {
-                            playerSeason1.bonusScoreTime(gamePlaying.getFirstPlayerInfo().getRemainTime(), gamePlaying.getSecondPlayerInfo().getRemainTime());
-                        } else if (playerSeason2.getWinStreak() != 0) {
-                            playerSeason2.bonusScoreTime(gamePlaying.getSecondPlayerInfo().getRemainTime(), gamePlaying.getFirstPlayerInfo().getRemainTime());
-                        }
-                        room.updateSeasonScore(playerSeason1);
-                        room.updateSeasonScore(playerSeason2);
-                        playerSeasonService.save(playerSeason1);
-                        playerSeasonService.save(playerSeason2);
-                    }
+                    if(room.isPlayOnline()) calculateScoreService.updateScore(room, false);
                     RoomDB roomDB = roomDBService.FindById(room.getRoomId());
                     roomDB.addGame(gamePlaying);
                     roomDBService.save(roomDB);
