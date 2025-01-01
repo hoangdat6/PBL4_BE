@@ -6,6 +6,7 @@ import org.pbl4.pbl4_be.payload.response.PlayerMatchingResponse;
 import org.pbl4.pbl4_be.services.GameRoomManager;
 import org.pbl4.pbl4_be.services.PlayerSeasonService;
 import org.pbl4.pbl4_be.services.SeasonService;
+import org.pbl4.pbl4_be.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -30,19 +31,21 @@ public class MatchmakingController {
     private int defaultTotalTime = 300;
     private int defaultTotalMove = 40;
     private FirstMoveOption defaultFirstMove = FirstMoveOption.RANDOM;
+    private final UserService userService;
 
 
     @Autowired
-    public MatchmakingController(PlayerSeasonService playerSeasonService, SeasonService seasonService, SimpMessagingTemplate messagingTemplate) {
+    public MatchmakingController(PlayerSeasonService playerSeasonService, SeasonService seasonService, SimpMessagingTemplate messagingTemplate, UserService userService) {
         this.playerSeasonService = playerSeasonService;
         this.seasonService = seasonService;
         this.messagingTemplate = messagingTemplate;
+        this.userService = userService;
     }
 
     @PostMapping("/add-player")
     public ResponseEntity<?> addPlayer(@AuthenticationPrincipal UserDetailsImpl currentUser) {
-        Long seasonId = seasonService.findCurrentSeason().orElseThrow().getId();
-        PlayerSeason playerSeason = playerSeasonService.findBySeasonIdAndPlayerId(seasonId, currentUser.getId()).orElseThrow();
+        Season season = seasonService.findCurrentSeason().orElseThrow();
+        PlayerSeason playerSeason = playerSeasonService.findBySeasonIdAndPlayerId(season.getId(), currentUser.getId()).orElse(new PlayerSeason(userService.findById(currentUser.getId()).orElse(null), season));
         PlayerMatching player = new PlayerMatching(playerSeason.getId(), playerSeason.getScore());
         try {
             CompletableFuture<PlayerMatchingResponse> futureMatch = CompletableFuture.supplyAsync(() -> matchPlayers(player), executorService);
