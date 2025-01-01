@@ -40,7 +40,7 @@ public class MatchmakingController {
         this.userService = userService;
     }
 
-    @PostMapping("/add-player")
+    @PostMapping("/find-opponent")
     public ResponseEntity<?> addPlayer(@AuthenticationPrincipal UserDetailsImpl currentUser) {
         Season season = seasonService.findCurrentSeason().orElseThrow();
         PlayerSeason playerSeason = playerSeasonService.findBySeasonIdAndPlayerId(season.getId(), currentUser.getId()).orElse(new PlayerSeason(userService.findById(currentUser.getId()).orElse(null), season));
@@ -55,7 +55,7 @@ public class MatchmakingController {
         }
     }
 
-    @PostMapping("/remove-player")
+    @PostMapping("/cancel")
     public ResponseEntity<?> removePlayer(@AuthenticationPrincipal UserDetailsImpl currentUser) {
         lock.lock();
         try {
@@ -128,12 +128,12 @@ public class MatchmakingController {
             messagingTemplate.convertAndSendToUser(
                     String.valueOf(response.getPlayer1().getId()),
                     "/queue/matchmaking",
-                    response
+                    response.getRoomCode()
             );
             messagingTemplate.convertAndSendToUser(
                     String.valueOf(response.getPlayer2().getId()),
                     "/queue/matchmaking",
-                    response
+                    response.getRoomCode()
             );
         } catch (Exception e) {
             // Ghi log lỗi

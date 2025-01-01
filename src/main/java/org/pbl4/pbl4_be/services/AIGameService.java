@@ -2,17 +2,22 @@ package org.pbl4.pbl4_be.services;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.pbl4.pbl4_be.controllers.dto.BoardDTO;
+import org.pbl4.pbl4_be.models.Board;
 import org.pbl4.pbl4_be.models.GameMove;
 
 import java.util.*;
 
 public class AIGameService {
-    private final int n = 16;
     private final long[] points = {100, 10000, 1000000, 100000000};
+    private final int n = 16;
     private short count;
     private final byte[][] board;
-    List<GameMove> moves;
     private final boolean playerFirst;
+    List<GameMove> moves;
+    @Getter
+    @Setter
+    private boolean isPlayerTurn = true;
     private static final int[][] DIRECTIONS = {
             {1, 0}, {0, 1}, {1, 1}, {1, -1} // Dọc, Ngang, Chéo chính, Chéo phụ
     };
@@ -164,6 +169,7 @@ public class AIGameService {
                 if (beta <= alpha) break; // Cắt tỉa
             }
             return maxEval;
+
         } else {
             long minEval = Long.MAX_VALUE;
             for (int[] move : generateMoves(board)) {
@@ -230,15 +236,31 @@ public class AIGameService {
         return gameMove;
     }
 
+    public void addMove(int row, int col) {
+        GameMove gameMove = new GameMove(row, col, count);
+        moves.add(gameMove);
+    }
+
     private String randomRoomCode() {
         Random random = new Random();
         int code = 100000 + random.nextInt(900000);
         return String.valueOf(code);
     }
 
+    public GameMove getLastMove() {
+        return moves.isEmpty() ? null : moves.get(moves.size() - 1);
+    }
+
     public String getRoomCode() {
         return randomRoomCode();
     }
 
-}
+    public BoardDTO getBoard() {
+        return new BoardDTO(new Board(board, n, 5));
+    }
 
+    public short getNthMove() {
+        return count;
+    }
+
+}

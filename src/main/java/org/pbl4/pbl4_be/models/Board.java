@@ -10,6 +10,12 @@ public class Board {
     private int size;
     private int winLength;
 
+    public Board(byte[][] board, int size, int winLength) {
+        this.board = board;
+        this.size = size;
+        this.winLength = winLength;
+    }
+
     public Board(int size, int winLength) {
         this.size = size;
         this.winLength = winLength;
