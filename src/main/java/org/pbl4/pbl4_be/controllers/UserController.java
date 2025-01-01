@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,10 +48,6 @@ public class UserController {
         return ResponseEntity.ok(result);
     }
 
-//    @GetMapping("/profile")
-//    public ResponseEntity<?> getProfile(@AuthenticationPrincipal UserDetailsImpl currentUser) {
-//        return ResponseEntity.ok(userService.findProfileById(currentUser.getId()).orElse(null));
-//    }
 
     @GetMapping("/info")
     public ResponseEntity<?> getInfo(@AuthenticationPrincipal UserDetailsImpl currentUser) {

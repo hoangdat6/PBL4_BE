@@ -10,6 +10,7 @@ public class PlayerMatchingResponse {
     private PlayerMatching player1;
     private PlayerMatching player2;
     private String roomCode;
+    
     public PlayerMatchingResponse(PlayerMatching player1, PlayerMatching player2, String roomCode) {
         this.player1 = player1;
         this.player2 = player2;
