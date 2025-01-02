@@ -15,7 +15,7 @@ public class CalculateScoreService {
     }
 
     public void updateScore(Room room, boolean isDraw) {
-        Game game = room.getGamePlaying();
+        Game game = room.getLastGame();
         Season season = seasonService.findCurrentSeason().orElse(null);
         if (season != null) {
             PlayerSeason playerSeason1 = playerSeasonService.findBySeasonIdAndPlayerId(season.getId(), game.getFirstPlayerId()).orElse(new PlayerSeason(userService.findById(game.getFirstPlayerId()).orElse(null), season));

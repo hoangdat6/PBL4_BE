@@ -25,23 +25,17 @@ import static org.pbl4.pbl4_be.Constants.*;
 @RestController
 @RequestMapping("/api/room")
 public class RoomController {
-    private final SimpMessagingTemplate messagingTemplate;
     private Logger logger = Logger.getLogger(RoomController.class.getName());
     private final UserService userService;
     private final WSService messagingService;
-    private final SeasonService seasonService;
-    private final PlayerSeasonService playerSeasonService;
     private final RoomDBService roomDBService;
     private final CalculateScoreService calculateScoreService;
     private final WSService wsService;
 
     @Autowired
-    public RoomController(GameRoomManager gameRoomManager, SimpMessagingTemplate messagingTemplate, WSService messagingService, UserService userService, SeasonService seasonService, PlayerSeasonService playerSeasonService, RoomDBService roomDBService, CalculateScoreService calculateScoreService, WSService wsService) {
-        this.messagingTemplate = messagingTemplate;
+    public RoomController(WSService messagingService, UserService userService, RoomDBService roomDBService, CalculateScoreService calculateScoreService, WSService wsService) {
         this.userService = userService;
         this.messagingService = messagingService;
-        this.seasonService = seasonService;
-        this.playerSeasonService = playerSeasonService;
         this.roomDBService = roomDBService;
         this.calculateScoreService = calculateScoreService;
         this.wsService = wsService;
@@ -231,7 +225,6 @@ public class RoomController {
 
         Room room = GameRoomManager.getInstance().getRoom(roomCode);
 
-
         if (room == null) {
             throw new BadRequestException("Room not found");
         }
@@ -252,7 +245,6 @@ public class RoomController {
         }
 
         // 2
-
         if (room.checkPlayerExist(userId)) {
             room.removePlayer(userId);
             Game gamePlaying = room.getGamePlaying();
