@@ -7,6 +7,7 @@ import org.pbl4.pbl4_be.services.GameRoomManager;
 import org.pbl4.pbl4_be.services.PlayerSeasonService;
 import org.pbl4.pbl4_be.services.SeasonService;
 import org.pbl4.pbl4_be.services.UserService;
+import org.pbl4.pbl4_be.ws.services.WSService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -22,28 +23,40 @@ import java.util.concurrent.locks.ReentrantLock;
 public class MatchmakingController {
     private final List<PlayerMatching> players = new ArrayList<>();
     private final ReentrantLock lock = new ReentrantLock();
-    private static final int MAX_SCORE_DIFFERENCE = 50;
+    private static final int MAX_SCORE_DIFFERENCE = 60;
     private static final int MAX_SCORE_SET_TIME = 20;
     private final ExecutorService executorService = Executors.newFixedThreadPool(10);
     private final PlayerSeasonService playerSeasonService;
     private final SeasonService seasonService;
-    private final SimpMessagingTemplate messagingTemplate;
-    private final FirstMoveOption defaultFirstMove = FirstMoveOption.RANDOM;
+    private int defaultTotalTime = 300;
+    private int defaultTotalMove = 40;
+    private FirstMoveOption defaultFirstMove = FirstMoveOption.RANDOM;
     private final UserService userService;
+    private final WSService wsService;
 
 
     @Autowired
-    public MatchmakingController(PlayerSeasonService playerSeasonService, SeasonService seasonService, SimpMessagingTemplate messagingTemplate, UserService userService) {
+    public MatchmakingController(PlayerSeasonService playerSeasonService, SeasonService seasonService, UserService userService, WSService wsService) {
         this.playerSeasonService = playerSeasonService;
         this.seasonService = seasonService;
-        this.messagingTemplate = messagingTemplate;
         this.userService = userService;
+        this.wsService = wsService;
     }
 
     @PostMapping("/find-opponent")
     public ResponseEntity<?> addPlayer(@AuthenticationPrincipal UserDetailsImpl currentUser) {
+        System.out.println("Player " + currentUser.getId() + " added to queue");
         Season season = seasonService.findCurrentSeason().orElseThrow();
-        PlayerSeason playerSeason = playerSeasonService.findBySeasonIdAndPlayerId(season.getId(), currentUser.getId()).orElse(new PlayerSeason(userService.findById(currentUser.getId()).orElse(null), season));
+        PlayerSeason playerSeason = playerSeasonService.findBySeasonIdAndPlayerId(
+                season.getId(),
+                currentUser.getId()
+        ).orElse(
+                new PlayerSeason(
+                        userService.findById(currentUser.getId()).orElse(null),
+                        season
+                ));
+
+        playerSeasonService.save(playerSeason);
         PlayerMatching player = new PlayerMatching(currentUser.getId(), playerSeason.getScore());
         try {
             CompletableFuture<PlayerMatchingResponse> futureMatch = CompletableFuture.supplyAsync(() -> matchPlayers(player), executorService);
@@ -57,10 +70,11 @@ public class MatchmakingController {
 
     @PostMapping("/cancel")
     public ResponseEntity<?> removePlayer(@AuthenticationPrincipal UserDetailsImpl currentUser) {
+        System.out.println("Player " + currentUser.getId() + " removed from queue");
         lock.lock();
         try {
-            Long seasonId = seasonService.findCurrentSeason().orElseThrow().getId();
-            PlayerSeason playerSeason = playerSeasonService.findBySeasonIdAndPlayerId(seasonId, currentUser.getId()).orElseThrow();
+            Season season = seasonService.findCurrentSeason().orElseThrow();
+            PlayerSeason playerSeason = playerSeasonService.findBySeasonIdAndPlayerId(season.getId(), currentUser.getId()).orElse(new PlayerSeason(userService.findById(currentUser.getId()).orElse(null), season));
             PlayerMatching player = new PlayerMatching(currentUser.getId(), playerSeason.getScore());
             players.remove(player);
         } finally {
@@ -124,22 +138,15 @@ public class MatchmakingController {
 
     public void sendMatchmakingMessage(PlayerMatchingResponse response) {
         try {
+            wsService.sendToUser(response.getPlayer1().getId(), "/queue/matchmaking", response.getRoomCode());
+            wsService.sendToUser(response.getPlayer2().getId(), "/queue/matchmaking", response.getRoomCode());
 
-            messagingTemplate.convertAndSendToUser(
-                    String.valueOf(response.getPlayer1().getId()),
-                    "/queue/matchmaking",
-                    response.getRoomCode()
-            );
-            messagingTemplate.convertAndSendToUser(
-                    String.valueOf(response.getPlayer2().getId()),
-                    "/queue/matchmaking",
-                    response.getRoomCode()
-            );
         } catch (Exception e) {
             // Ghi log lỗi
             System.err.println("Error sending matchmaking message: " + e.getMessage());
         }
     }
+
     private String randomRoomCode() {
         Random random = new Random();
         int code = 100000 + random.nextInt(900000);

@@ -12,6 +12,7 @@ public class GameRoomManager {
     public static GameRoomManager instance = new GameRoomManager();
 
     private Map<String, Room> rooms = new ConcurrentHashMap<>();
+    private Map<Long, String> playerRoomMap = new ConcurrentHashMap<>();
 
     public static GameRoomManager getInstance() {
         if(instance == null) {
@@ -23,7 +24,6 @@ public class GameRoomManager {
     /*
      * Khi tạo room, tạo luôn game đầu tiên cho room đó
      */
-
     public Room createRoom(String roomId, GameConfig gameConfig, boolean isPlayOnline) {
         Room room = new Room(roomId, gameConfig, isPlayOnline);
         rooms.put(roomId, room);
@@ -39,15 +39,28 @@ public class GameRoomManager {
         return isRoomExist(roomId);
     }
 
-    public String getRoomCodeByPlayerId(Long playerId) {
-        for (Room room : rooms.values()) {
-            if ( !room.isEnd()
-                    && room.checkPlayerExist(playerId)) {
-                return room.getRoomCode();
-            }
-        }
+    public void addPlayerToRoom(Long playerId, String roomId) {
+        playerRoomMap.put(playerId, roomId);
+    }
 
-        return null;
+    public void removePlayerFromRoom(Long playerId) {
+        playerRoomMap.remove(playerId);
+    }
+
+    public void removePlayerFromRoom(String roomId) {
+        playerRoomMap.entrySet().removeIf(entry -> entry.getValue().equals(roomId));
+    }
+
+    public String getRoomCodeByPlayerId(Long playerId) {
+//        for (Room room : rooms.values()) {
+//            if (!room.isEnd()
+//                    && room.checkPlayerExist(playerId)) {
+//                return room.getRoomCode();
+//            }
+//        }
+//        return null;
+
+        return playerRoomMap.get(playerId);
     }
 
     public String getRoomCodeBySpectatorId(Long spectatorId) {
@@ -67,6 +80,7 @@ public class GameRoomManager {
 
     public void removeRoom(String roomId) {
         rooms.remove(roomId);
+        GameRoomManager.getInstance().removePlayerFromRoom(roomId);
     }
 
     public Integer getRoomsSize() {

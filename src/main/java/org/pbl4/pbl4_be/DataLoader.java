@@ -60,28 +60,28 @@ public class DataLoader implements ApplicationRunner {
          * Mỗi season sẽ diễn ra trong thời gian 1 tháng
          * Nếu server được start lên mà tháng đó chưa có season nào của tháng đó thì sẽ tạo season mới
          */
-//        Season currentSeason = seasonService.findCurrentSeason().orElse(null);
-//
-//        if (currentSeason == null) {
-//            ZonedDateTime date = ZonedDateTime.now();
-//            // Lấy ngày đầu tiên của tháng hiện tại
-//            LocalDateTime startDate = date.with(TemporalAdjusters.firstDayOfMonth()).toLocalDateTime();
-//            startDate = startDate.withHour(0).withMinute(0).withSecond(0).withNano(0);
-//            // Lấy ngày cuối cùng của tháng hiện tại
-//            LocalDateTime endDate = date.with(TemporalAdjusters.lastDayOfMonth()).toLocalDateTime();
-//            endDate = endDate.withHour(23).withMinute(59).withSecond(59).withNano(999999999);
-//            // Tạo season mới
-//
-//            System.out.println("startDate: " + startDate);
-//            System.out.println("endDate: " + endDate);
-//            Season season = new Season();
-//            season.setStartDate(startDate);
-//            season.setEndDate(endDate);
-//            season.setName("Season " + startDate.getMonthValue() + "/" + startDate.getYear());
-//            season.setReward("Reward for season " + startDate.getMonthValue() + "/" + startDate.getYear());
-//
-//            seasonService.addSeason(season);
-//        }
+        Season currentSeason = seasonService.findCurrentSeason().orElse(null);
+
+        if (currentSeason == null) {
+            ZonedDateTime date = ZonedDateTime.now();
+            // Lấy ngày đầu tiên của tháng hiện tại
+            LocalDateTime startDate = date.with(TemporalAdjusters.firstDayOfMonth()).toLocalDateTime();
+            startDate = startDate.withHour(0).withMinute(0).withSecond(0).withNano(0);
+            // Lấy ngày cuối cùng của tháng hiện tại
+            LocalDateTime endDate = date.with(TemporalAdjusters.lastDayOfMonth()).toLocalDateTime();
+            endDate = endDate.withHour(23).withMinute(59).withSecond(59).withNano(999999999);
+            // Tạo season mới
+
+            System.out.println("startDate: " + startDate);
+            System.out.println("endDate: " + endDate);
+            Season season = new Season();
+            season.setStartDate(startDate);
+            season.setEndDate(endDate);
+            season.setName("Season " + startDate.getMonthValue() + "/" + startDate.getYear());
+            season.setReward("Reward for season " + startDate.getMonthValue() + "/" + startDate.getYear());
+
+            seasonService.addSeason(season);
+        }
 
     }
 }

@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.pbl4.pbl4_be.enums.FirstMoveOption;
 import org.pbl4.pbl4_be.enums.GameStatus;
+import org.pbl4.pbl4_be.services.GameRoomManager;
 
 
 import java.util.ArrayList;
@@ -122,6 +123,8 @@ public class Room {
             return;
         }
         players.add(player);
+        GameRoomManager.getInstance().addPlayerToRoom(player.getId(), roomCode);
+
         if (isFull()) {
             setRoomStatusTypes(GameStatus.STARTED);
         }
@@ -151,6 +154,8 @@ public class Room {
                 player.setLeaveRoom(true);
             }
         } );
+
+        GameRoomManager.getInstance().removePlayerFromRoom(playerId);
 
         if(players.isEmpty() && roomStatusTypes == GameStatus.STARTED) {
             setRoomStatusTypes(GameStatus.ENDED);
