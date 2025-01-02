@@ -28,9 +28,7 @@ public class MatchmakingController {
     private final PlayerSeasonService playerSeasonService;
     private final SeasonService seasonService;
     private final SimpMessagingTemplate messagingTemplate;
-    private int defaultTotalTime = 300;
-    private int defaultTotalMove = 40;
-    private FirstMoveOption defaultFirstMove = FirstMoveOption.RANDOM;
+    private final FirstMoveOption defaultFirstMove = FirstMoveOption.RANDOM;
     private final UserService userService;
 
 
@@ -46,7 +44,7 @@ public class MatchmakingController {
     public ResponseEntity<?> addPlayer(@AuthenticationPrincipal UserDetailsImpl currentUser) {
         Season season = seasonService.findCurrentSeason().orElseThrow();
         PlayerSeason playerSeason = playerSeasonService.findBySeasonIdAndPlayerId(season.getId(), currentUser.getId()).orElse(new PlayerSeason(userService.findById(currentUser.getId()).orElse(null), season));
-        PlayerMatching player = new PlayerMatching(playerSeason.getId(), playerSeason.getScore());
+        PlayerMatching player = new PlayerMatching(currentUser.getId(), playerSeason.getScore());
         try {
             CompletableFuture<PlayerMatchingResponse> futureMatch = CompletableFuture.supplyAsync(() -> matchPlayers(player), executorService);
             PlayerMatchingResponse matchedPlayers = futureMatch.join();
@@ -63,7 +61,7 @@ public class MatchmakingController {
         try {
             Long seasonId = seasonService.findCurrentSeason().orElseThrow().getId();
             PlayerSeason playerSeason = playerSeasonService.findBySeasonIdAndPlayerId(seasonId, currentUser.getId()).orElseThrow();
-            PlayerMatching player = new PlayerMatching(playerSeason.getId(), playerSeason.getScore());
+            PlayerMatching player = new PlayerMatching(currentUser.getId(), playerSeason.getScore());
             players.remove(player);
         } finally {
             lock.unlock();
@@ -79,24 +77,7 @@ public class MatchmakingController {
     private PlayerMatchingResponse matchPlayers(PlayerMatching player) {
         lock.lock();
         try {
-            PlayerMatching bestMatch = null;
-            int minScoreDifference = Integer.MAX_VALUE;
-
-            for (PlayerMatching otherPlayer : players) {
-                if (!Objects.equals(player.getId(), otherPlayer.getId())) {
-                    int scoreDifference = Math.abs(player.getScore() - otherPlayer.getScore());
-                    if (scoreDifference <= MAX_SCORE_DIFFERENCE) {
-                        if (bestMatch == null ||
-                                (scoreDifference <= MAX_SCORE_SET_TIME && otherPlayer.getJoinTime() < bestMatch.getJoinTime())) {
-                            bestMatch = otherPlayer;
-                            minScoreDifference = scoreDifference;
-                        } else if (scoreDifference < minScoreDifference) {
-                            bestMatch = otherPlayer;
-                            minScoreDifference = scoreDifference;
-                        }
-                    }
-                }
-            }
+            PlayerMatching bestMatch = getPlayerMatching(player);
 
             if (bestMatch != null) {
                 players.remove(bestMatch);
@@ -104,6 +85,9 @@ public class MatchmakingController {
                 while (GameRoomManager.getInstance().checkRoomExist(roomCode)) {
                     roomCode = randomRoomCode();
                 }
+                System.out.println("Matched players: " + player.getId() + " and " + bestMatch.getId());
+                int defaultTotalTime = 300;
+                int defaultTotalMove = 40;
                 GameConfig gameConfig = new GameConfig(defaultTotalTime, defaultTotalMove, defaultFirstMove);
                 GameRoomManager.getInstance().createRoom(roomCode, gameConfig, true);
                 sendMatchmakingMessage(new PlayerMatchingResponse(player, bestMatch, roomCode));
@@ -114,6 +98,28 @@ public class MatchmakingController {
         } finally {
             lock.unlock();
         }
+    }
+
+    private PlayerMatching getPlayerMatching(PlayerMatching player) {
+        PlayerMatching bestMatch = null;
+        int minScoreDifference = Integer.MAX_VALUE;
+
+        for (PlayerMatching otherPlayer : players) {
+            if (!Objects.equals(player.getId(), otherPlayer.getId())) {
+                int scoreDifference = Math.abs(player.getScore() - otherPlayer.getScore());
+                if (scoreDifference <= MAX_SCORE_DIFFERENCE) {
+                    if (bestMatch == null ||
+                            (scoreDifference <= MAX_SCORE_SET_TIME && otherPlayer.getJoinTime() < bestMatch.getJoinTime())) {
+                        bestMatch = otherPlayer;
+                        minScoreDifference = scoreDifference;
+                    } else if (scoreDifference < minScoreDifference) {
+                        bestMatch = otherPlayer;
+                        minScoreDifference = scoreDifference;
+                    }
+                }
+            }
+        }
+        return bestMatch;
     }
 
     public void sendMatchmakingMessage(PlayerMatchingResponse response) {
