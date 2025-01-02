@@ -4,21 +4,25 @@ import lombok.Getter;
 import lombok.Setter;
 import org.pbl4.pbl4_be.models.GameMove;
 
-import java.util.Random;
+import java.util.*;
 
 public class AIGameService {
-    private final long[] points = {100, 10000, 1000000, 100000000};
     private final int n = 16;
-    private final long inf = (long)1e18;
+    private final long[] points = {100, 10000, 1000000, 100000000};
     private short count;
     private final byte[][] board;
+    List<GameMove> moves;
     private final boolean playerFirst;
+    private static final int[][] DIRECTIONS = {
+            {1, 0}, {0, 1}, {1, 1}, {1, -1} // Dọc, Ngang, Chéo chính, Chéo phụ
+    };
     @Getter
     @Setter
     private Long playerId;
 
     public AIGameService(boolean playerFirst) {
         board = new byte[n][n];
+        moves = new ArrayList<>();
         count = 0;
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
@@ -27,64 +31,58 @@ public class AIGameService {
         }
         this.playerFirst = playerFirst;
         if(!playerFirst) {
-            board[n / 2][n / 2] = 'X';
+            board[n / 2][n / 2] = 0;
+            moves.add(new GameMove(n / 2, n / 2, count));
             count++;
         }
 
     }
 
-    public boolean checkEnd(int i, int j, byte symbol, byte[][] board) {
-        int row = 1, col = 1, diag1 = 1, diag2 = 1;
-
-        for (int k = 1; k < 5; k++) {
-            if (j + k < n && board[i][j + k] == symbol) row++;
-            else break;
-        }
-        for (int k = 1; k < 5; k++) {
-            if (j - k >= 0 && board[i][j - k] == symbol) row++;
-            else break;
-        }
-
-        for (int k = 1; k < 5; k++) {
-            if (i + k < n && board[i + k][j] == symbol) col++;
-            else break;
-        }
-        for (int k = 1; k < 5; k++) {
-            if (i - k >= 0 && board[i - k][j] == symbol) col++;
+    boolean checkOver(int x, int y, byte[][] board, int dx, int dy) {
+        byte length = 1, symbol = board[x][y];
+        int n = board.length;
+        for(int i = 1; i <= 4; i++){
+            int nx = x - i * dx, ny = y - i * dy;
+            if (nx < 0 || ny < 0 || nx >= n || ny >= n) break; // Ra khỏi bàn cờ
+            if (board[nx][ny] == symbol) length++;
             else break;
         }
 
-        for (int k = 1; k < 5; k++) {
-            if (i + k < n && j + k < n && board[i + k][j + k] == symbol) diag1++;
+        for(int i = 1; i <= 4; i++){
+            int nx = x + i * dx, ny = y + i * dy;
+            if (nx < 0 || ny < 0 || nx >= n || ny >= n) break; // Ra khỏi bàn cờ
+            if (board[nx][ny] == symbol) length++;
             else break;
         }
-        for (int k = 1; k < 5; k++) {
-            if (i - k >= 0 && j - k >= 0 && board[i - k][j - k] == symbol) diag1++;
-            else break;
-        }
-
-        for (int k = 1; k < 5; k++) {
-            if (i + k < n && j - k >= 0 && board[i + k][j - k] == symbol) diag2++;
-            else break;
-        }
-        for (int k = 1; k < 5; k++) {
-            if (i - k >= 0 && j + k < n && board[i - k][j + k] == symbol) diag2++;
-            else break;
-        }
-
-        return row >= 5 || col >= 5 || diag1 >= 5 || diag2 >= 5;
+        return length >= 5;
     }
 
-    public long evaluateRow(int i, int j, byte r, byte[][] board) {
+    boolean isGameOver(int x, int y, byte[][] board) {
+        for (int[] dir : DIRECTIONS) {
+            if (checkOver(x, y, board, dir[0], dir[1])) return true;
+        }
+        return false;
+    }
+
+    public long evaluate(int i, int j, byte r, byte[][] board, int stepX, int stepY) {
         long res = 1, check = 1, block = 0, S = 0;
-        if (j - 1 >= 0 && board[i][j - 1] == r) return 0;
-        if (j - 1 < 0 || board[i][j - 1] == (r + 1)%2) block++;
+        int n = board.length;
+
+        // Kiểm tra trước điểm bắt đầu
+        int prevX = i - stepX;
+        int prevY = j - stepY;
+        if (prevX >= 0 && prevX < n && prevY >= 0 && prevY < n && board[prevX][prevY] == r) return 0;
+        if (prevX < 0 || prevX >= n || prevY < 0 || prevY >= n || board[prevX][prevY] == (r + 1) % 2) block++;
+
+        // Duyệt theo hướng được chỉ định
         for (int k = 1; k < 5; k++) {
-            if (j + k < n) {
-                if (board[i][j + k] == r) {
+            int newX = i + k * stepX;
+            int newY = j + k * stepY;
+            if (newX >= 0 && newX < n && newY >= 0 && newY < n) {
+                if (board[newX][newY] == r) {
                     if (check >= 0) res++;
                     else break;
-                } else if (board[i][j + k] == -1) {
+                } else if (board[newX][newY] == -1) {
                     check--;
                 } else {
                     block++;
@@ -96,301 +94,138 @@ public class AIGameService {
             }
         }
 
-        if (res == 5) return inf;
+        // Xử lý kết quả
+        if (res >= 5) return Long.MAX_VALUE / 10;
         long div = (block == 0 ? 1 : (block == 1 ? 100 : 1000000000));
         S += points[(int)(res - 1)] / div;
         return S;
     }
 
-    public long evaluateCol(int i, int j, byte r, byte[][] board) {
-        long res = 1, check = 1, block = 0, S = 0;
-        if (i - 1 >= 0 && board[i - 1][j] == r) return 0;
-        if (i - 1 < 0 || board[i - 1][j] == (r + 1)%2) block++;
 
-        for (int k = 1; k < 5; k++) {
-            if (i + k < n) {
-                if (board[i + k][j] == r) {
-                    if (check >= 0) res++;
-                    else break;
-                } else if (board[i + k][j] == -1) {
-                    check--;
-                } else {
-                    block++;
-                    break;
-                }
-            } else {
-                block++;
-                break;
-            }
+    public long centralPositionHeuristic(int i, int j, int n) {
+        int center = n / 2;
+        return -(Math.abs(i - center) + Math.abs(j - center)); // Càng gần trung tâm càng tốt
+    }
+    public long evaluatePosition(int i, int j, byte player, byte[][] board) {
+        long S = 0;
+        for (int[] dir : DIRECTIONS) {
+            S += evaluate(i, j, player, board, dir[0], dir[1]);
         }
-
-        if (res == 5) return inf;
-        long div = (block == 0 ? 1 : (block == 1 ? 100 : 1000000000));
-        S += points[(int)(res - 1)] / div;
+        S += centralPositionHeuristic(i, j, n);
         return S;
     }
 
-    public long evaluateDiag1(int i, int j, byte r, byte[][] board) {
-        long res = 1, check = 1, block = 0, S = 0;
-        if (i - 1 >= 0 && j - 1 >= 0 && board[i - 1][j - 1] == r) return 0;
-        if (i - 1 < 0 || j - 1 < 0 || board[i - 1][j - 1] == (r + 1)%2) block++;
 
-        for (int k = 1; k < 5; k++) {
-            if (i + k < n && j + k < n) {
-                if (board[i + k][j + k] == r) {
-                    if (check >= 0) res++;
-                    else break;
-                } else if (board[i + k][j + k] == -1) {
-                    check--;
-                } else {
-                    block++;
-                    break;
-                }
-            } else {
-                block++;
-                break;
-            }
-        }
-
-        if (res == 5) return inf;
-        long div = (block == 0 ? 1 : (block == 1 ? 100 : 1000000000));
-        S += points[(int)(res - 1)] / div;
-        return S;
-    }
-
-    public long evaluateDiag2(int i, int j, byte r, byte[][] board) {
-        long res = 1, check = 1, block = 0, S = 0;
-        if (i - 1 >= 0 && j + 1 < n && board[i - 1][j + 1] == r) return 0;
-        if (i - 1 < 0 || j + 1 >= n || board[i - 1][j + 1] == (r + 1)%2) block++;
-
-        for (int k = 1; k < 5; k++) {
-            if (i + k < n && j - k >= 0) {
-                if (board[i + k][j - k] == r) {
-                    if (check >= 0) res++;
-                    else break;
-                } else if (board[i + k][j - k] == -1) {
-                    check--;
-                } else {
-                    block++;
-                    break;
-                }
-            } else {
-                block++;
-                break;
-            }
-        }
-
-        if (res == 5) return inf;
-        long div = (block == 0 ? 1 : (block == 1 ? 100 : 1000000000));
-        S += points[(int)(res - 1)] / div;
-        return S;
-    }
-
-    public boolean operations(int i, int j) {
-        if(board[i][j] != -1) {
-            return false;
-        }
-        board[i][j] = (byte)((count % 2 == 0) ? 1 : 0);
-        count++;
-        return true;
-    }
-
-    public long heuristicEvaluate(byte player, byte bot, int depth, byte[][] board) {
+    public long heuristicEvaluate(byte player, byte bot, byte[][] board) {
         long A = 0, B = 0;
 
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < n; j++) {
-                if (board[i][j] == -1) continue;
-
-                if (board[i][j] == player) {
-                    B += evaluateRow(i, j, player, board);
-                    B += evaluateCol(i, j, player, board);
-                    B += evaluateDiag1(i, j, player, board);
-                    B += evaluateDiag2(i, j, player, board);
-                } else {
-                    A += evaluateRow(i, j, bot, board);
-                    A += evaluateCol(i, j, bot, board);
-                    A += evaluateDiag1(i, j, bot, board);
-                    A += evaluateDiag2(i, j, bot, board);
-                }
+        for(GameMove move : moves) {
+            int i = move.getRow(), j = move.getCol();
+            if (board[i][j] == player) {
+                A += evaluatePosition(i, j, player, board);
+            } else {
+                B += evaluatePosition(i, j, bot, board);
             }
         }
 
-        return (depth == 0) ? A - 2 * B : A - B;
+        return B - A;
     }
 
-    public long alphaBeta(int depth, long alpha, long beta, boolean maximizingPlayer, byte player, byte bot, int ii, int jj, byte[][] board) {
-        if (depth == 0 || checkEnd(ii, jj, player, board)) {
-            return heuristicEvaluate(player, bot, depth, board);
+    public List<int[]> generateMoves(byte[][] board) {
+        Set<int[]> candidateMoves = new HashSet<>();
+        for (GameMove move : moves) {
+            int row = move.getRow(), col = move.getCol();
+            for (int dx = -2; dx <= 2; dx++) {
+                for (int dy = -2; dy <= 2; dy++) {
+                    int x = row + dx, y = col + dy;
+                    if (x >= 0 && y >= 0 && x < board.length && y < board.length && board[x][y] == -1) {
+                        candidateMoves.add(new int[]{x, y});
+                    }
+                }
+            }
+        }
+        return new ArrayList<>(candidateMoves);
+    }
+    public long alphaBeta(int i, int j, int depth, long alpha, long beta, boolean maximizingPlayer, byte player, byte bot, byte[][] board) {
+        if (depth == 0 || isGameOver(i, j, board)) {
+            return heuristicEvaluate(player, bot, board);
         }
 
         if (maximizingPlayer) {
             long maxEval = Long.MIN_VALUE;
-            int l = (n - 1) / 2, t = (n - 1) / 2;
-            int r = (n + 1) / 2, b = (n + 1) / 2;
-
-            while (beta > alpha) {
-                for (int i = l; i <= Math.min(r, n - 1) && t >= 0; i++) {
-                    if (board[t][i] == -1) {
-                        board[t][i] = bot;
-                        long eval = alphaBeta(depth - 1, alpha, beta, false, player, bot, t, i, board);
-                        maxEval = Math.max(maxEval, eval);
-                        alpha = Math.max(alpha, eval);
-                        board[t][i] = -1;
-                        if (beta <= alpha) break;
-                    }
-                }
-                if (beta <= alpha) break;
-                l--;
-
-                for (int i = t + 1; i <= Math.min(b, n - 1) && r < n; i++) {
-                    if (board[i][r] == -1) {
-                        board[i][r] = bot;
-                        long eval = alphaBeta(depth - 1, alpha, beta, false, player, bot, i, r, board);
-                        maxEval = Math.max(maxEval, eval);
-                        alpha = Math.max(alpha, eval);
-                        board[i][r] = -1;
-                        if (beta <= alpha) break;
-                    }
-                }
-                if (beta <= alpha) break;
-
-                for (int i = r - 1; i >= Math.max(l, 0) && b < n; i--) {
-                    if (board[b][i] == -1) {
-                        board[b][i] = bot;
-                        long eval = alphaBeta(depth - 1, alpha, beta, false, player, bot, b, i, board);
-                        maxEval = Math.max(maxEval, eval);
-                        alpha = Math.max(alpha, eval);
-                        board[b][i] = -1;
-                        if (beta <= alpha) break;
-                    }
-                }
-                if (beta <= alpha) break;
-
-                for (int i = b - 1; i >= Math.max(t, 0) && l >= 0; i--) {
-                    if (board[i][l] == -1) {
-                        board[i][l] = bot;
-                        long eval = alphaBeta(depth - 1, alpha, beta, false, player, bot, i, l, board);
-                        maxEval = Math.max(maxEval, eval);
-                        alpha = Math.max(alpha, eval);
-                        board[i][l] = -1;
-                        if (beta <= alpha) break;
-                    }
-                }
-                r++;
-                t--;
-                b++;
-                if (l < 0 && r >= n && t < 0 && b >= n) break;
+            for (int[] move : generateMoves(board)) { // Lấy các nước đi có thể
+                board[move[0]][move[1]] = bot;
+                moves.add(new GameMove(move[0], move[1], count));
+                long eval = alphaBeta(move[0], move[1], depth - 1, alpha, beta, false, player, bot, board);
+                moves.remove(moves.size() - 1);
+                board[move[0]][move[1]] = -1;
+                maxEval = Math.max(maxEval, eval);
+                alpha = Math.max(alpha, eval);
+                if (beta <= alpha) break; // Cắt tỉa
             }
             return maxEval;
-
         } else {
             long minEval = Long.MAX_VALUE;
-            int l = (n - 1) / 2, t = (n - 1) / 2;
-            int r = (n + 1) / 2, b = (n + 1) / 2;
-
-            while (beta > alpha) {
-                for (int i = l; i <= Math.min(r, n - 1) && t >= 0; i++) {
-                    if (board[t][i] == -1) {
-                        board[t][i] = player;
-                        long eval = alphaBeta(depth - 1, alpha, beta, true, player, bot, t, i, board);
-                        minEval = Math.min(minEval, eval);
-                        beta = Math.min(beta, eval);
-                        board[t][i] = -1;
-                        if (beta <= alpha) break;
-                    }
-                }
-                if (beta <= alpha) break;
-                l--;
-
-                for (int i = t + 1; i <= Math.min(b, n - 1) && r < n; i++) {
-                    if (board[i][r] == -1) {
-                        board[i][r] = player;
-                        long eval = alphaBeta(depth - 1, alpha, beta, true, player, bot, i, r, board);
-                        minEval = Math.min(minEval, eval);
-                        beta = Math.min(beta, eval);
-                        board[i][r] = -1;
-                        if (beta <= alpha) break;
-                    }
-                }
-                if (beta <= alpha) break;
-
-                for (int i = r - 1; i >= Math.max(l, 0) && b < n; i--) {
-                    if (board[b][i] == -1) {
-                        board[b][i] = player;
-                        long eval = alphaBeta(depth - 1, alpha, beta, true, player, bot, b, i, board);
-                        minEval = Math.min(minEval, eval);
-                        beta = Math.min(beta, eval);
-                        board[b][i] = -1;
-                        if (beta <= alpha) break;
-                    }
-                }
-                if (beta <= alpha) break;
-
-                for (int i = b - 1; i >= Math.max(t, 0) && l >= 0; i--) {
-                    if (board[i][l] == -1) {
-                        board[i][l] = player;
-                        long eval = alphaBeta(depth - 1, alpha, beta, true, player, bot, i, l, board);
-                        minEval = Math.min(minEval, eval);
-                        beta = Math.min(beta, eval);
-                        board[i][l] = -1;
-                        if (beta <= alpha) break;
-                    }
-                }
-                r++;
-                t--;
-                b++;
-                if (l < 0 && r >= n && t < 0 && b >= n) break;
+            for (int[] move : generateMoves(board)) {
+                board[move[0]][move[1]] = player;
+                moves.add(new GameMove(move[0], move[1], count));
+                long eval = alphaBeta(move[0], move[1], depth - 1, alpha, beta, true, player, bot, board);
+                moves.remove(moves.size() - 1);
+                board[move[0]][move[1]] = -1;
+                minEval = Math.min(minEval, eval);
+                beta = Math.min(beta, eval);
+                if (beta <= alpha) break; // Cắt tỉa
             }
             return minEval;
         }
     }
     public GameMove playGame(int playerRow, int playerCol) {
-        byte playerSymbol = playerFirst ? (byte) 1 : (byte) 0;
-        byte botSymbol = playerFirst ? (byte) 0 : (byte) 1;
+        byte playerSymbol = playerFirst ? (byte) 0 : (byte) 1;
+        byte botSymbol = playerFirst ? (byte) 1 : (byte) 0;
         byte winner = -1;
         int depth = 2;
         GameMove gameMove = new GameMove();
-        if (operations(playerRow, playerCol)) {
-            if (checkEnd(playerRow, playerCol, playerSymbol, board)) {
+        if (board[playerRow][playerCol] == -1) {
+            board[playerRow][playerCol] = playerSymbol;
+            moves.add(new GameMove(playerRow, playerCol, count));
+            count++;
+            if (isGameOver(playerRow, playerCol, board)) {
                 System.out.println("End game");
                 winner = playerSymbol;
                 gameMove = new GameMove(-1, -1, count);
             } else {
-                // Khởi tạo các biến để lưu nước đi tốt nhất của bot
                 long bestScore = Long.MIN_VALUE;
                 int bestRow = -1, bestCol = -1;
 
-                // Tìm kiếm nước đi tốt nhất của bot
-                for (int i = 0; i < n; i++) {
-                    for (int j = 0; j < n; j++) {
-                        if (board[i][j] == -1) {
-                            board[i][j] = botSymbol;
-                            long moveScore = alphaBeta(depth, Long.MIN_VALUE, Long.MAX_VALUE, false, playerSymbol, botSymbol, i, j, board);
-                            board[i][j] = -1;
+                for (int[] move : generateMoves(board)) {
+                    board[move[0]][move[1]] = botSymbol;
+                    moves.add(new GameMove(move[0], move[1], count));
+                    long moveScore = alphaBeta(move[0], move[1], depth, Long.MIN_VALUE, Long.MAX_VALUE, false, playerSymbol, botSymbol, board);
+                    moves.remove(moves.size() - 1);
+                    board[move[0]][move[1]] = -1;
 
-                            if (moveScore > bestScore) {
-                                bestScore = moveScore;
-                                bestRow = i;
-                                bestCol = j;
-                            }
-                        }
+                    if (moveScore > bestScore) {
+                        bestScore = moveScore;
+                        bestRow = move[0];
+                        bestCol = move[1];
                     }
                 }
 
-                // Đặt nước đi tốt nhất của bot lên bàn cờ
-                operations(bestRow, bestCol);
+                board[bestRow][bestCol] = botSymbol;
                 gameMove.setRow(bestRow);
                 gameMove.setCol(bestCol);
                 gameMove.setNthMove(count);
-                if (checkEnd(bestRow, bestCol, botSymbol, board)) {
+                moves.add(gameMove);
+                count++;
+                if (isGameOver(bestRow, bestCol, board)) {
+                    System.out.println("End game");
                     winner = botSymbol;
                 }
             }
         } else {
             System.out.println("Invalid player move");
         }
-
+        System.out.println(gameMove.getRow() + " " + gameMove.getCol());
         gameMove.setWin(winner != -1);
         return gameMove;
     }
@@ -406,3 +241,4 @@ public class AIGameService {
     }
 
 }
+
