@@ -51,6 +51,10 @@ public class RoomDBService {
         }).collect(Collectors.toList());
     }
 
+    public List<RoomDB> GetAllRoomByPlayerId(Long playerId) {
+        return roomDBRepository.findAllByPlayer1IdOrPlayer2Id(playerId, playerId, Sort.by(Sort.Direction.DESC, "createdAt"));
+    }
+
     @Transactional
     public RoomDB FindById(Long id) {
         return roomDBRepository.findById(id).orElse(null);

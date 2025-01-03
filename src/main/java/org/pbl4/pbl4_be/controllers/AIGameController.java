@@ -34,7 +34,6 @@ public class AIGameController {
         AIGameService aiGameService = new AIGameService(true);
         String roomCode = aiGameService.getRoomCode();
         gameRoomManager.put(roomCode, aiGameService);
-        System.out.println("New size: " + gameRoomManager.size());
         return ResponseEntity.ok(roomCode);
     }
 

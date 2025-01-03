@@ -1,5 +1,6 @@
 package org.pbl4.pbl4_be.services;
 
+import lombok.Getter;
 import org.pbl4.pbl4_be.models.GameConfig;
 import org.pbl4.pbl4_be.models.Room;
 import org.springframework.stereotype.Component;
@@ -11,8 +12,9 @@ import java.util.concurrent.ConcurrentHashMap;
 public class GameRoomManager {
     public static GameRoomManager instance = new GameRoomManager();
 
-    private Map<String, Room> rooms = new ConcurrentHashMap<>();
-    private Map<Long, String> playerRoomMap = new ConcurrentHashMap<>();
+    @Getter
+    private final Map<String, Room> rooms = new ConcurrentHashMap<>();
+    private final Map<Long, String> playerRoomMap = new ConcurrentHashMap<>();
 
     public static GameRoomManager getInstance() {
         if(instance == null) {
@@ -86,4 +88,5 @@ public class GameRoomManager {
     public Integer getRoomsSize() {
         return rooms.size();
     }
+
 }
