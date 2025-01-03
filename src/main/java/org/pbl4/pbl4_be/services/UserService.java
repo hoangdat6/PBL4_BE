@@ -12,6 +12,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -27,6 +28,10 @@ public class UserService {
         this.userRepository = userRepository;
         this.playerSeasonRepository = playerSeasonRepository;
         this.seasonRepository = seasonRepository;
+    }
+
+    public List<User> findAll() {
+        return userRepository.findAll();
     }
 
     public Optional<User> findByEmail(String email) {
@@ -116,5 +121,13 @@ public class UserService {
         int hours = time / 60;
         int minutes = time % 60;
         return hours + "h " + minutes + "m";
+    }
+
+    public List<Object[]> getPlayerStatisticsWithPagination(String sortColumn, int size, int offset) {
+        return userRepository.getPlayerStatisticsWithPagination(sortColumn, size, offset);
+    }
+
+    public int countTotalPlayers(int size) {
+        return (userRepository.countTotalPlayers() + size - 1) / size;
     }
 }
