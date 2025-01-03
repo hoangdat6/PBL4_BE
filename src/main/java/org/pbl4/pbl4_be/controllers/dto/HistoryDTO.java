@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.pbl4.pbl4_be.models.User;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
 @Getter
 @Setter
@@ -12,7 +12,7 @@ public class HistoryDTO {
     private Long roomId;
     private PlayerHistoryDTO player1;
     private PlayerHistoryDTO player2;
-    private LocalDateTime createdAt;
+    private ZonedDateTime createdAt;
 
     public HistoryDTO(RoomDTO room, User player1, User player2) {
         this.roomId = room.getId();

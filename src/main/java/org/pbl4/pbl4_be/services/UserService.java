@@ -53,10 +53,6 @@ public class UserService {
         return Optional.of(new UserDTO(user.getId(), user.getName(), user.getAvatar(), score));
     }
 
-    public Integer getPlayerTimeById(Long userId) {
-//        User
-        return 1200;
-    }
 
     /**
      * Find profile by user id
@@ -82,7 +78,6 @@ public class UserService {
                 .name(user.getName())
                 .avatar(user.getAvatar())
 
-                .playTimes(intToTime(getPlayerTimeById(userId)))
                 .dateJoined(
                         user.getCreatedAt().getDayOfMonth() + "/" +
                                 user.getCreatedAt().getMonthValue() + "/" +
@@ -99,12 +94,14 @@ public class UserService {
             profileDTO.setDraws(playerSeason.getDrawCount());
             profileDTO.setLosses(playerSeason.getLoseCount());
             profileDTO.setStreaks(playerSeason.getWinStreak());
+            profileDTO.setPlayTimes(intToTime(playerSeason.getPlayerTime()));
         } else {
             profileDTO.setPoints(0);
             profileDTO.setWins(0);
             profileDTO.setDraws(0);
             profileDTO.setLosses(0);
             profileDTO.setStreaks(0);
+            profileDTO.setPlayTimes("0h 0m");
         }
 
         return Optional.of(profileDTO);

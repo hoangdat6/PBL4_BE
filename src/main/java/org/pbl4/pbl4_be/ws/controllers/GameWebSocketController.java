@@ -16,7 +16,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
 import static org.pbl4.pbl4_be.Constants.GAME_PROGRESS_TOPIC;
 import static org.pbl4.pbl4_be.Constants.PLAY_AGAIN_TOPIC;
@@ -51,7 +51,7 @@ public class GameWebSocketController {
         Room room = GameRoomManager.getInstance().getRoom(roomCode);
 
         Game game = room.getGamePlaying();
-        move.setDuration((int) Duration.between(game.getStartTimeMove(), LocalDateTime.now()).getSeconds());
+        move.setDuration((int) Duration.between(game.getStartTimeMove(), ZonedDateTime.now()).getSeconds());
         game.getMoveList().add(move);
         game.resetRemainMoveTime(move.getPlayerTurnId());
 
@@ -97,7 +97,7 @@ public class GameWebSocketController {
 
     private void setGameEnd(Game game) {
         game.setGameStatus(GameStatus.ENDED);
-        game.setEndTime(LocalDateTime.now());
+        game.setEndTime(ZonedDateTime.now());
     }
 
     @MessageMapping("/play-again/{roomCode}")
@@ -138,7 +138,7 @@ public class GameWebSocketController {
     public void sendMessage(@DestinationVariable String roomCode, @Payload Message message) {
         Room room = GameRoomManager.getInstance().getRoom(roomCode);
 
-        message.setSendTime(LocalDateTime.now());
+        message.setSendTime(ZonedDateTime.now());
         room.addMessage(message);
 
         for(Player player : room.getPlayers()) {

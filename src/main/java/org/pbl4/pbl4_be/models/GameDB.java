@@ -3,7 +3,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TimeZone;
@@ -27,16 +27,16 @@ public class GameDB {
     private Long winnerId;
 
     @Column(name = "start_time")
-    private LocalDateTime startTime;
+    private ZonedDateTime startTime;
 
     @Column(name = "end_time")
-    private LocalDateTime endTime;
+    private ZonedDateTime endTime;
 
     @Column(name = "first_player_id")
     private Long firstPlayerId;
 
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    private ZonedDateTime createdAt;
 
     // Quan hệ 1-nhiều với Move
     @OneToMany(mappedBy = "game", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)

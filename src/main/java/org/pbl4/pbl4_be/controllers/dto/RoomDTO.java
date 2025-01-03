@@ -3,7 +3,7 @@ package org.pbl4.pbl4_be.controllers.dto;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 @Getter
@@ -18,10 +18,10 @@ public class RoomDTO {
     private Boolean isPrivate;
     private String status;
     private Long createdBy;
-    private LocalDateTime createdAt;
+    private ZonedDateTime createdAt;
     private List<GameDTO> games;
 
-    public RoomDTO(Long id, String code, Long player1Id, Long player2Id, Integer gameDuration, Integer moveDuration, Boolean isPrivate, String status, Long createdBy, LocalDateTime createdAt, List<GameDTO> games) {
+    public RoomDTO(Long id, String code, Long player1Id, Long player2Id, Integer gameDuration, Integer moveDuration, Boolean isPrivate, String status, Long createdBy, ZonedDateTime createdAt, List<GameDTO> games) {
         this.id = id;
         this.code = code;
         this.player1Id = player1Id;

@@ -5,7 +5,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -23,12 +23,12 @@ public class UserDetailsImpl implements UserDetails {
     private Integer maxRating;
     private Integer lastSeason;
     private Boolean isDeleted;
-    private LocalDateTime lastLogin;
+    private ZonedDateTime lastLogin;
     private Collection<? extends GrantedAuthority> authorities;
 
     public UserDetailsImpl(Long id, String email, String password, String name, String avatar,
                            Integer maxRating, Integer lastSeason, Boolean isDeleted,
-                           LocalDateTime lastLogin, Collection<? extends GrantedAuthority> authorities) {
+                           ZonedDateTime lastLogin, Collection<? extends GrantedAuthority> authorities) {
         this.id = id;
         this.email = email;
         this.password = password;

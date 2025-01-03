@@ -7,7 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -36,10 +36,10 @@ public class User {
     private Integer lastSeason;
     private Boolean isDeleted;
 
-    private LocalDateTime lastLogin;
+    private ZonedDateTime lastLogin;
 
     @NotNull
-    private LocalDateTime createdAt;
+    private ZonedDateTime createdAt;
 
     // Phân quyền cho người dùng
     @ManyToMany(fetch = FetchType.LAZY)
@@ -59,6 +59,6 @@ public class User {
 
     @PrePersist
     protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = ZonedDateTime.now();
     }
 }
