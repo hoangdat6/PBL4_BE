@@ -3,7 +3,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 @Entity
@@ -40,7 +40,7 @@ public class RoomDB {
     private Long createdBy;
 
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    private ZonedDateTime createdAt;
 
     @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<GameDB> games;
@@ -55,7 +55,7 @@ public class RoomDB {
         this.isPrivate = room.isPrivate();
         this.status = room.getRoomStatusTypes().toString();
         this.createdBy = room.getPlayers().get(0).getId();
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = ZonedDateTime.now();
     }
 
     public void addGame(Game game){

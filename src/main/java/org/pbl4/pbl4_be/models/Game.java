@@ -3,7 +3,8 @@ import lombok.Getter;
 import lombok.Setter;
 import org.pbl4.pbl4_be.enums.GameStatus;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -19,12 +20,12 @@ public class  Game {
     private PlayerTimeInfo firstPlayerInfo; // thông tin người chơi đi nước đầu tiên
     private PlayerTimeInfo secondPlayerInfo; // thông tin người chơi đi nước thứ hai
     private short nthMove;
-    private LocalDateTime startTime;
-    private LocalDateTime endTime;
-    private LocalDateTime createdAt;
+    private ZonedDateTime startTime;
+    private ZonedDateTime endTime;
+    private ZonedDateTime createdAt;
     private List<GameMove> moveList;
     private GameStatus gameStatus;
-    private LocalDateTime startTimeMove;
+    private ZonedDateTime startTimeMove;
     private boolean isPlayAgain;
     private Integer moveDuration;
 
@@ -33,12 +34,12 @@ public class  Game {
         this.gameId = gameId;
         this.board = new Board(16, 5);
         this.nthMove = 0;
-        this.startTime = LocalDateTime.now();
+        this.startTime = ZonedDateTime.now();
         this.endTime = null;
         this.winnerId = null;
         this.moveList = new ArrayList<>();
         this.gameStatus = GameStatus.NOT_STARTED;
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = ZonedDateTime.now();
         this.isPlayAgain = false;
         this.moveDuration = gameConfig.getMoveDuration();
         this.firstPlayerInfo = new PlayerTimeInfo(
@@ -46,7 +47,7 @@ public class  Game {
                 gameConfig.getTotalTime(),
                 gameConfig.getMoveDuration(),
                 0,
-                LocalDateTime.now()
+                ZonedDateTime.now()
         );
 
         this.secondPlayerInfo = new PlayerTimeInfo(
@@ -54,7 +55,7 @@ public class  Game {
                 gameConfig.getTotalTime(),
                 gameConfig.getMoveDuration(),
                 0,
-                LocalDateTime.now()
+                ZonedDateTime.now()
         );
     }
 
@@ -75,7 +76,7 @@ public class  Game {
     }
 
     public void setStartTimeMove(){
-        this.startTimeMove = LocalDateTime.now();
+        this.startTimeMove = ZonedDateTime.now();
     }
 
     public boolean isEnd() {
@@ -88,7 +89,7 @@ public class  Game {
     }
 
     public void startGame() {
-        this.startTimeMove = LocalDateTime.now();
+        this.startTimeMove = ZonedDateTime.now();
         this.firstPlayerInfo.setInitialTimeInfo(moveDuration);
         this.secondPlayerInfo.setInitialTimeInfo(moveDuration);
         this.gameStatus = GameStatus.STARTED;

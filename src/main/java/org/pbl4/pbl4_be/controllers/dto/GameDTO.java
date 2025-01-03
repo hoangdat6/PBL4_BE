@@ -3,7 +3,7 @@ package org.pbl4.pbl4_be.controllers.dto;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 @Getter
@@ -11,13 +11,13 @@ import java.util.List;
 public class GameDTO {
     private Long id;
     private Long winnerId;
-    private LocalDateTime startTime;
-    private LocalDateTime endTime;
+    private ZonedDateTime startTime;
+    private ZonedDateTime endTime;
     private Long firstPlayerId;
-    private LocalDateTime createdAt;
+    private ZonedDateTime createdAt;
     private List<GameMoveDTO> moves;  // Danh sách các nước đi
 
-    public GameDTO(Long id, Long winnerId, LocalDateTime startTime, LocalDateTime endTime, Long firstPlayerId, LocalDateTime createdAt, List<GameMoveDTO> moves) {
+    public GameDTO(Long id, Long winnerId, ZonedDateTime startTime, ZonedDateTime endTime, Long firstPlayerId, ZonedDateTime createdAt, List<GameMoveDTO> moves) {
         this.id = id;
         this.winnerId = winnerId;
         this.startTime = startTime;

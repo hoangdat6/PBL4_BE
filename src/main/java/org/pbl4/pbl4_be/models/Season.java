@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 @Entity
@@ -23,11 +23,11 @@ public class Season {
 
 //    @NotBlank
     @Column(name="start_date")
-    private LocalDateTime startDate;
+    private ZonedDateTime startDate;
 
 //    @NotBlank
     @Column(name="end_date")
-    private LocalDateTime endDate;
+    private ZonedDateTime endDate;
 
 //    @NotBlank
     @Column(name="reward")

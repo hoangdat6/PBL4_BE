@@ -52,9 +52,14 @@ public class UserController {
     @GetMapping("/info")
     public ResponseEntity<?> getInfo(@AuthenticationPrincipal UserDetailsImpl currentUser) {
         Long id = currentUser.getId();
-        Long seasonId = seasonService.findCurrentSeason().orElseThrow(() -> new BadRequestException("Season not found")).getId();
-        Integer score = playerSeasonService.findBySeasonIdAndPlayerId(seasonId, id).isPresent() ? playerSeasonService.findBySeasonIdAndPlayerId(seasonId, id).get().getScore() : null; // null if not in season
-        return ResponseEntity.ok(userService.findUserWithScoreBySeasonId(id, score).orElse(null));
+        try {
+            Long seasonId = seasonService.findCurrentSeason().orElseThrow(() -> new BadRequestException("Season not found")).getId();
+            Integer score = playerSeasonService.findBySeasonIdAndPlayerId(seasonId, id).isPresent() ?
+                    playerSeasonService.findBySeasonIdAndPlayerId(seasonId, id).get().getScore() : null; // null if not in season
+            return ResponseEntity.ok(userService.findUserWithScoreBySeasonId(id, score).orElse(null));
+        }catch (Exception e){
+            return ResponseEntity.ok(userService.findById(id).orElse(null));
+        }
     }
 
     @GetMapping("/account-info")
