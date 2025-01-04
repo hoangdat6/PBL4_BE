@@ -102,7 +102,7 @@ public class AIGameService {
         // Xử lý kết quả
         if (res >= 5) return Long.MAX_VALUE / 10;
         long div = (block == 0 ? 1 : (block == 1 ? 100 : 1000000000));
-        S += points[(int)(res - 1)] / div;
+        S += res/2 * points[(int)(res - 1)] / div;
         return S;
     }
 
