@@ -237,13 +237,6 @@ public class RoomController {
          * 2. Người chơi đang chơi game và rời phòng -> lưu lại kết quả, kết thúc game, thông báo người thắng
          * 3. Ván đấu kết thúc và người chơi rời phòng
          */
-        // 1
-        if (room.getPlayers().size() == 1) {
-            GameRoomManager.getInstance().removeRoom(roomCode);
-            logger.info("Số lượng phòng trong hệ thống: " + GameRoomManager.getInstance().getRoomsSize());
-            return ResponseEntity.status(HttpStatus.OK).body(RoomResponse.builder().roomCode(roomCode).build());
-        }
-
         // 2
         if (room.checkPlayerExist(userId)) {
             room.removePlayer(userId);
@@ -260,6 +253,7 @@ public class RoomController {
                 // send game end message
                 messagingService.sendGameEndMessage(roomCode, gamePlaying.getWinnerId());
             }
+            GameRoomManager.getInstance().removeRoom(roomCode);
         } else if (room.checkSpectatorExist(userId)) {
             room.removeSpectator(userId);
             wsService.sendAllPlayers(room.getPlayers(), SPECTATORS_TOPIC + roomCode, room.getSpectators());
