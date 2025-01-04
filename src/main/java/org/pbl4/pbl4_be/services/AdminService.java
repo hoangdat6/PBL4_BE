@@ -1,22 +1,35 @@
 package org.pbl4.pbl4_be.services;
 
 import org.pbl4.pbl4_be.controllers.dto.MatchDTO;
+import org.pbl4.pbl4_be.controllers.dto.MatchData;
 import org.pbl4.pbl4_be.controllers.dto.PlayerMatchDTO;
 import org.pbl4.pbl4_be.controllers.dto.PlayerStatisticDTO;
 import org.pbl4.pbl4_be.models.*;
 import org.pbl4.pbl4_be.payload.response.PlayerStatisticResponse;
+import org.pbl4.pbl4_be.payload.response.SeasonStatisticResponse;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Service
 public class AdminService {
     private final UserService userService;
+    private final RoomDBService roomDBService;
+    private final SeasonService seasonService;
 
-    public AdminService(UserService userService) {
+    public AdminService(UserService userService, RoomDBService roomDBService, SeasonService seasonService) {
         this.userService = userService;
+        this.roomDBService = roomDBService;
+        this.seasonService = seasonService;
     }
 
 
@@ -51,9 +64,50 @@ public class AdminService {
                     room.getPlayers().get(0).getAvatar(), room.getPlayers().get(0).getMatchScore());
             PlayerMatchDTO player2 = new PlayerMatchDTO(room.getPlayers().get(1).getId(), room.getPlayers().get(1).getName(),
                     room.getPlayers().get(1).getAvatar(), room.getPlayers().get(1).getMatchScore());
-            matchDTOS.add(new MatchDTO(room.getRoomId(), player1, player2));
+            matchDTOS.add(new MatchDTO(room.getRoomCode(), player1, player2));
         }
         return matchDTOS;
     }
+
+    public List<String> getDatesBetween(ZonedDateTime startDate, ZonedDateTime endDate) {
+        LocalDate startLocalDate = startDate.toLocalDate();
+        LocalDate endLocalDate = endDate.toLocalDate();
+
+        if (startLocalDate.isAfter(endLocalDate)) {
+            throw new IllegalArgumentException("Start date must be before end date");
+        }
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+        long numOfDays = ChronoUnit.DAYS.between(startLocalDate, endLocalDate) + 1; // +1 để bao gồm cả endLocalDate
+        return IntStream.range(0, (int) numOfDays)
+                .mapToObj(startLocalDate::plusDays)
+                .map(formatter::format) // Áp dụng định dạng cho từng ngày
+                .collect(Collectors.toList());
+    }
+
+    public String formatDate(ZonedDateTime date) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        return date.format(formatter);  // Chuyển đổi ngày thành chuỗi dd/MM/yyyy
+    }
+
+    public SeasonStatisticResponse getSeasonStatistic(Season season) {
+        if (season == null) {
+            return null;
+        }
+        List<MatchData> matchData = new ArrayList<>();
+        for (String date : getDatesBetween(season.getStartDate(), season.getEndDate())) {
+            matchData.add(new MatchData(date, roomDBService.countGamesByDate(date)));
+        }
+
+        LocalDate startDate = season.getStartDate().toLocalDate();
+        LocalDate endDate = season.getEndDate().toLocalDate();
+
+        int totalOnlineGames = roomDBService.countGamesByOnlineStatus(true, startDate, endDate);
+        int totalFriendGames = roomDBService.countGamesByOnlineStatus(false, startDate, endDate);
+        int totalPlayers = roomDBService.countDistinctPlayers(startDate, endDate);
+        return new SeasonStatisticResponse(totalOnlineGames, totalFriendGames, totalPlayers, matchData);
+    }
+
 
 }

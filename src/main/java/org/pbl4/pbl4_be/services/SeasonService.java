@@ -20,4 +20,7 @@ public class SeasonService {
     public void addSeason(Season season) {
         seasonRepository.save(season);
     }
+    public Optional<Season> findById(Long id) {
+        return seasonRepository.findById(id);
+    }
 }

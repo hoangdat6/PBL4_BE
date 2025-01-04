@@ -1,5 +1,6 @@
 package org.pbl4.pbl4_be.models;
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -42,8 +43,12 @@ public class RoomDB {
     @Column(name = "created_at")
     private ZonedDateTime createdAt;
 
+    @Column(name = "is_play_online")
+    private Boolean isPlayOnline;
+
     @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<GameDB> games;
+
 
     public RoomDB(Room room){
         this.code = room.getRoomCode();
@@ -55,6 +60,7 @@ public class RoomDB {
         this.isPrivate = room.isPrivate();
         this.status = room.getRoomStatusTypes().toString();
         this.createdBy = room.getPlayers().get(0).getId();
+        this.isPlayOnline = room.isPlayOnline();
         this.createdAt = ZonedDateTime.now();
     }
 
