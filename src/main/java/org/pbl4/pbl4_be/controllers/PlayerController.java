@@ -25,7 +25,6 @@ public class PlayerController {
 
     @GetMapping("/profile")
     public ResponseEntity<?> getProfile(@RequestParam Long id) {
-        System.out.println(id);
         return ResponseEntity.ok(userService.findProfileById(id).orElse(null));
     }
 }

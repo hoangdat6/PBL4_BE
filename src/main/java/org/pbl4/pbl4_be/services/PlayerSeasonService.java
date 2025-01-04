@@ -35,4 +35,8 @@ public class PlayerSeasonService {
 //        }
 //    }
 
+    public int getRank(int score, Long seasonId) {
+        return playerSeasonRepository.countAllByScoreGreaterThan(score, seasonId) + 1;
+    }
+
 }

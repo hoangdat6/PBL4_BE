@@ -4,10 +4,12 @@ import org.pbl4.pbl4_be.models.Season;
 import org.pbl4.pbl4_be.services.AdminService;
 import org.pbl4.pbl4_be.services.SeasonService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/admin")
+@PreAuthorize("hasRole('ADMIN')")
 public class AdminController {
     private final AdminService adminService;
     private final SeasonService seasonService;
