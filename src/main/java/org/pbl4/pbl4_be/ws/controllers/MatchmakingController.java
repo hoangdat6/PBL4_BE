@@ -75,8 +75,8 @@ public class MatchmakingController {
         try {
             Season season = seasonService.findCurrentSeason().orElseThrow();
             PlayerSeason playerSeason = playerSeasonService.findBySeasonIdAndPlayerId(season.getId(), currentUser.getId()).orElse(new PlayerSeason(userService.findById(currentUser.getId()).orElse(null), season));
-            PlayerMatching player = new PlayerMatching(currentUser.getId(), playerSeason.getScore());
-            players.remove(player);
+            players.stream().filter(p -> p.getId().equals(currentUser.getId())).findFirst().ifPresent(players::remove);
+
         } finally {
             lock.unlock();
         }

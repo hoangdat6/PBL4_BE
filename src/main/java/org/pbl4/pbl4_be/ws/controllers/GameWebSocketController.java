@@ -114,17 +114,24 @@ public class GameWebSocketController {
             }
             return ResponseEntity.ok(PlayAgainResponse.builder().playerId(request.getPlayerId()).roomCode(roomCode).code(PlayAgainCode.PLAY_AGAIN).
                     build());
-        } else {
+        } else if(player != null && !player.isReady()) {
             room.setPlayerIsReady(true);
             return ResponseEntity.ok(PlayAgainResponse.builder().playerId(request.getPlayerId()).roomCode(roomCode).code(PlayAgainCode.PLAY_AGAIN_ACCEPT).
                     build());
         }
+
+        return ResponseEntity.ok(PlayAgainResponse.builder().playerId(request.getPlayerId()).roomCode(roomCode).code(PlayAgainCode.PLAY_AGAIN_WAIT).
+                build());
     }
 
     @MessageMapping("/winner/{roomCode}")
     @SendTo("/topic/winner/{roomCode}")
     public ResponseEntity<?> getWinner(@DestinationVariable String roomCode, @Payload Long winnerId) {
         Room room = GameRoomManager.getInstance().getRoom(roomCode);
+
+        if(room == null) {
+            return ResponseEntity.badRequest().body("Room not found");
+        }
         Game game = room.getLastGame();
 
         game.setWinnerId(winnerId);
