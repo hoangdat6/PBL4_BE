@@ -140,8 +140,8 @@ public class AIGameService {
         Set<int[]> candidateMoves = new HashSet<>();
         for (GameMove move : moves) {
             int row = move.getRow(), col = move.getCol();
-            for (int dx = -2; dx <= 2; dx++) {
-                for (int dy = -2; dy <= 2; dy++) {
+            for (int dx = -1; dx <= 1; dx++) {
+                for (int dy = -1; dy <= 1; dy++) {
                     int x = row + dx, y = col + dy;
                     if (x >= 0 && y >= 0 && x < board.length && y < board.length && board[x][y] == -1) {
                         candidateMoves.add(new int[]{x, y});
@@ -152,8 +152,12 @@ public class AIGameService {
         return new ArrayList<>(candidateMoves);
     }
     public long alphaBeta(int i, int j, int depth, long alpha, long beta, boolean maximizingPlayer, byte player, byte bot, byte[][] board) {
-        if (depth == 0 || isGameOver(i, j, board)) {
+        if (depth == 0) {
             return heuristicEvaluate(player, bot, board);
+        }
+
+        if(isGameOver(i, j, board)) {
+            return board[i][j] == player ? Long.MIN_VALUE : Long.MAX_VALUE;
         }
 
         if (maximizingPlayer) {
