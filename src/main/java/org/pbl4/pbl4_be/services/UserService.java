@@ -20,14 +20,16 @@ public class UserService {
     private final UserRepository userRepository;
     private final PlayerSeasonRepository playerSeasonRepository;
     private final SeasonRepository seasonRepository;
+    private final PlayerSeasonService playerSeasonService;
 
 //    @Autowired
 //    private BCryptPasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository, PlayerSeasonRepository playerSeasonRepository, SeasonRepository seasonRepository) {
+    public UserService(UserRepository userRepository, PlayerSeasonRepository playerSeasonRepository, SeasonRepository seasonRepository, PlayerSeasonService playerSeasonService) {
         this.userRepository = userRepository;
         this.playerSeasonRepository = playerSeasonRepository;
         this.seasonRepository = seasonRepository;
+        this.playerSeasonService = playerSeasonService;
     }
 
     public List<User> findAll() {
@@ -93,7 +95,7 @@ public class UserService {
         PlayerSeason playerSeason = playerSeasonRepository.findBySeasonIdAndPlayerId(currentSeason.getId(), userId).orElse(null);
 
         if (playerSeason != null) {
-            profileDTO.setRank(-1);
+            profileDTO.setRank(playerSeasonService.getRank(playerSeason.getScore(), currentSeason.getId()));
             profileDTO.setPoints(playerSeason.getScore());
             profileDTO.setWins(playerSeason.getWinCount());
             profileDTO.setDraws(playerSeason.getDrawCount());

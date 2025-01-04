@@ -23,6 +23,9 @@ public interface PlayerSeasonRepository extends JpaRepository<PlayerSeason, Long
             Pageable pageable
     );
 
+    @Query("SELECT COUNT(ps) FROM PlayerSeason ps WHERE ps.score > :score AND ps.season.id = :seasonId")
+    int countAllByScoreGreaterThan(@Param("score") int score, @Param("seasonId") Long seasonId);
+
 
 
 }
