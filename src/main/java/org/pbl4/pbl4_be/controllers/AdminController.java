@@ -1,6 +1,8 @@
 package org.pbl4.pbl4_be.controllers;
 
+import org.pbl4.pbl4_be.models.Season;
 import org.pbl4.pbl4_be.services.AdminService;
+import org.pbl4.pbl4_be.services.SeasonService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -8,9 +10,11 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/admin")
 public class AdminController {
     private final AdminService adminService;
+    private final SeasonService seasonService;
 
-    public AdminController(AdminService adminService) {
+    public AdminController(AdminService adminService, SeasonService seasonService) {
         this.adminService = adminService;
+        this.seasonService = seasonService;
     }
 
     @GetMapping("/get-all-players")
@@ -23,5 +27,9 @@ public class AdminController {
         return ResponseEntity.ok(adminService.getAllCurrentMatches());
     }
 
-
+    @GetMapping("/season-statistic")
+    public ResponseEntity<?> getSeasonStatistic() {
+        Season season = seasonService.findCurrentSeason().orElse(null);
+        return ResponseEntity.ok(adminService.getSeasonStatistic(season));
+    }
 }

@@ -8,6 +8,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -55,9 +56,23 @@ public class RoomDBService {
         return roomDBRepository.findAllByPlayer1IdOrPlayer2Id(playerId, playerId, Sort.by(Sort.Direction.DESC, "createdAt"));
     }
 
+    public int countGamesByDate(String date) {
+        return roomDBRepository.countGamesByDate(date);
+    }
+
+    public int countGamesByOnlineStatus(boolean isPlayOnline ,LocalDate startDate, LocalDate endDate) {
+        return roomDBRepository.countGamesByOnlineStatus(isPlayOnline, startDate, endDate);
+    }
+
+    public int countDistinctPlayers(LocalDate startDate, LocalDate endDate) {
+        return roomDBRepository.countDistinctPlayers(startDate, endDate);
+    }
+
+
     @Transactional
     public RoomDB FindById(Long id) {
         return roomDBRepository.findById(id).orElse(null);
     }
+
 
 }
