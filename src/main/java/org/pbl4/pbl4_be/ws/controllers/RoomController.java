@@ -144,6 +144,7 @@ public class RoomController {
                 .gameConfig(room.getGameConfig())
                 .winnerId(lastGame.getWinnerId())
                 .spectators(room.getSpectators())
+                .messages(room.getMessages())
                 .build();
 
         if (Objects.equals(player1.getId(), lastGame.getFirstPlayerId())) {

@@ -4,10 +4,7 @@ import com.google.gson.Gson;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
-import org.pbl4.pbl4_be.models.Board;
-import org.pbl4.pbl4_be.models.GameConfig;
-import org.pbl4.pbl4_be.models.GameMove;
-import org.pbl4.pbl4_be.models.Player;
+import org.pbl4.pbl4_be.models.*;
 
 import java.util.List;
 
@@ -25,6 +22,7 @@ public class GameState {
     private PlayerForGameState player1Info;
     private PlayerForGameState player2Info;
     private List<Player> spectators;
+    private List<Message> messages;
 
     public void setBoardState(Board board) {
         Gson gson = new Gson();
