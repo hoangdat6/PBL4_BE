@@ -19,4 +19,5 @@ public class SignupRequest {
 
     @NotBlank
     private String name;
+    private String avatar;
 }
