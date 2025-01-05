@@ -115,13 +115,15 @@ public class RoomController {
         if (!room.checkPlayerExist(userId)) {
             response.setParticipantType(ParticipantType.SPECTATOR);
             User user = userService.findById(userId).orElseThrow(() -> new BadRequestException("User not found"));
-            room.addSpectator(Player.builder()
-                    .id(user.getId())
-                    .name(user.getName())
-                    .avatar(user.getAvatar())
-                    .build()
-            );
-            wsService.sendAllPlayers(room.getPlayers(), SPECTATORS_TOPIC + roomCode, room.getSpectators());
+
+            if(!room.checkSpectatorExist(userId)) {
+                room.addSpectator(Player.builder()
+                        .id(user.getId())
+                        .name(user.getName())
+                        .avatar(user.getAvatar())
+                        .build());
+                wsService.sendAllPlayers(room.getPlayers(), SPECTATORS_TOPIC + roomCode, room.getSpectators());
+            }
         }
 
         // Return a response with the room details
