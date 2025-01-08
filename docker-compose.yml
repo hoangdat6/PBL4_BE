@@ -3,7 +3,7 @@ version: '3.8'
 services:
   db:
     image: mysql:8
-    container_name: pbl4-be-db
+    container_name: caroarena-db
     environment:
       MYSQL_ROOT_PASSWORD: dat123
       MYSQL_DATABASE: pbl4_be
@@ -18,10 +18,11 @@ services:
       retries: 5
 
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: pbl4-be-app
+#    build:
+#      context: .
+#      dockerfile: Dockerfile
+    image: hoangdat1612/caroarena-app
+    container_name: caroarena-app
     ports:
       - "5999:5999"
     environment:
