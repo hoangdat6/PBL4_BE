@@ -3,23 +3,31 @@ FROM maven:3.8.5-openjdk-17-slim AS build
 
 WORKDIR /app
 
-# Copy the pom.xml and download dependencies
+# Copy source code and build application
 COPY pom.xml .
-RUN mvn dependency:go-offline
-
-# Copy the source code and build the application
 COPY src ./src
-RUN mvn clean package -DskipTests
+RUN mvn clean package -DskipTests && \
+    rm -rf ~/.m2/repository ~/.m2/settings.xml /app/target/generated-sources
 
 # Stage 2: Create the final image
-FROM openjdk:17-jdk-slim-buster
+FROM openjdk:17-jdk-alpine
 
 WORKDIR /app
 
-# Copy the JAR file from the build stage
+# Copy JAR file from build stage
 COPY --from=build /app/target/*.jar ./app.jar
 
 # Set the entry point
-ENTRYPOINT ["sh", "-c", "java --add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.time=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.time.zone=ALL-UNNAMED -Djava.net.preferIPv4Stack=true -Duser.timezone=Asia/Ho_Chi_Minh -Dspring.datasource.url=${SPRING_DATASOURCE_URL:-jdbc:mysql://db:3306/pbl4_be?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true} -Dspring.datasource.username=${SPRING_DATASOURCE_USERNAME:-root} -Dspring.datasource.password=${SPRING_DATASOURCE_PASSWORD:-dat123} -jar app.jar"]
+ENTRYPOINT ["sh",\
+ "-c", \
+ "java --add-opens java.base/java.util=ALL-UNNAMED \
+ --add-opens java.base/java.time=ALL-UNNAMED \
+ --add-opens java.base/java.lang=ALL-UNNAMED \
+ --add-opens java.base/java.time.zone=ALL-UNNAMED \
+ -Djava.net.preferIPv4Stack=true \
+ -Duser.timezone=Asia/Ho_Chi_Minh \
+ -Dspring.datasource.url=${SPRING_DATASOURCE_URL} \
+ -Dspring.datasource.username=${SPRING_DATASOURCE_USERNAME} \
+ -Dspring.datasource.password=${SPRING_DATASOURCE_PASSWORD} \
+ -jar app.jar"]
 
-EXPOSE 5999

@@ -1,40 +1,39 @@
-import groovy.transform.Field
-
-
 pipeline {
     agent any
+
     environment {
         GIT_URL = 'git@github.com:hoangdat6/PBL4_BE.git'
-        SSH_ID_REF = 'GitSSH'
     }
 
     stages {
-        stage('checkout') {
+        stage('Checkout') {
             steps {
-                withCredentials([sshUserPrivateKey(credentialsId: env.SSH_ID_REF, keyFileVariable: 'SSH_KEY')]) {
-                    script {
-                        // Checkout code từ Git
-                        git branch: 'main', credentialsId: null, url: env.GIT_URL,
-                                credentials: 'SSH_KEY'
-                        // chuyển đến thư mục chứa code
-                        dir('PBL4_BE')
-                    }
+                withCredentials([sshUserPrivateKey(credentialsId: 'github-credentials-id', keyFileVariable: 'GITHUB_SSH_KEY')]) {
+                    sh 'mkdir -p ~/.ssh && ssh-keyscan github.com >> ~/.ssh/known_hosts'
+                    git branch: 'dev', credentialsId: 'github-credentials-id', url: env.GIT_URL
                 }
             }
         }
-        stage('build') {
+
+        stage('Build') {
             steps {
-                script {
-                    // Build docker compose
-                    sh 'docker compose build'
+                sh 'docker build -t caroarena:latest .'
+            }
+        }
+
+        stage('Login to DockerHub') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials-id', usernameVariable: 'DOCKERHUB_CREDENTIALS_USR', passwordVariable: 'DOCKERHUB_CREDENTIALS_PSW')]) {
+                    sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
                 }
             }
         }
-        stage('deploy') {
+
+        stage('Push to DockerHub') {
             steps {
-                script {
-                    // Deploy docker compose
-                    sh 'docker compose up -d'
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials-id', usernameVariable: 'DOCKERHUB_CREDENTIALS_USR', passwordVariable: 'DOCKERHUB_CREDENTIALS_PSW')]) {
+                    sh 'docker tag caroarena:latest $DOCKERHUB_CREDENTIALS_USR/caroarena:1.0.0'
+                    sh 'docker push $DOCKERHUB_CREDENTIALS_USR/caroarena:1.0.0'
                 }
             }
         }
