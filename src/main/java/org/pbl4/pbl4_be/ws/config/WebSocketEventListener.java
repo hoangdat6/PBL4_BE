@@ -9,6 +9,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.messaging.SessionConnectEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
+import java.util.Objects;
+
 @Component
 public class WebSocketEventListener {
     private final SimpMessagingTemplate messagingTemplate;
@@ -22,7 +24,7 @@ public class WebSocketEventListener {
     @EventListener
     public void handleWebSocketConnectListener(SessionConnectEvent event) {
         StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
-        logger.info("New connection: " + headerAccessor.getSessionId() );
+        logger.info("New connection: " + Objects.requireNonNull(headerAccessor.getUser()).getName() + " with id: " + headerAccessor.getSessionId() );
 
     }
 
@@ -30,7 +32,7 @@ public class WebSocketEventListener {
     @EventListener
     public void handleWebSocketDisconnectListener(SessionDisconnectEvent event) {
         StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
-        logger.info("User disconnected: " + headerAccessor.getSessionId());
+        logger.info("Connection closed: " + Objects.requireNonNull(headerAccessor.getUser()).getName() + " with id: " + headerAccessor.getSessionId() );
     }
 
 
