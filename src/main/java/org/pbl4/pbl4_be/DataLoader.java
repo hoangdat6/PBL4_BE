@@ -28,6 +28,7 @@ public class DataLoader implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
+        System.out.println(System.getenv("PORT"));
         log.info("Init season");
         /**
          * Init season
