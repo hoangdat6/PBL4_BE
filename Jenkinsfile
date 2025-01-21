@@ -10,7 +10,7 @@ pipeline {
             steps {
                 withCredentials([sshUserPrivateKey(credentialsId: 'github-credentials-id', keyFileVariable: 'GITHUB_SSH_KEY')]) {
                     sh 'mkdir -p ~/.ssh && ssh-keyscan github.com >> ~/.ssh/known_hosts'
-                    git branch: 'dev', credentialsId: 'github-credentials-id', url: env.GIT_URL
+                    git branch: 'main', credentialsId: 'github-credentials-id', url: env.GIT_URL
                 }
             }
         }
